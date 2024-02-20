@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
         printf("%s@%s:%s$ ", username, hostname, cwd);
     } else {
         printf("Non-interactive mode detected!\n");
+        //test
     }
 
     while (true) {
