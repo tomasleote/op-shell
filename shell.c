@@ -8,27 +8,39 @@
 #include "command.h"
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 
-/*
-void executeCommand(Command* cmd) {
-    pid_t pid = fork();
-
-    if (pid == 0) { // Child process
-        // Convert cmd->options to the format expected by execvp
-        char** args = prepareArgsForExecvp(cmd);
-        execvp(cmd->command, args);
-        // If execvp returns, an error occurred
-        perror("execvp");
-        exit(EXIT_FAILURE);
-    } else if (pid > 0) { // Parent process
-        int status;
-        waitpid(pid, &status, 0); // Wait for the child process to complete
-    } else {
-        // Handle error in fork()
-        perror("fork");
-        exit(EXIT_FAILURE);
+char *str_joiner(const char *s1, const char *s2) {
+    if (!s1 || !s2) return NULL;
+    char *result = malloc(strlen(s1) + strlen(s2) + 1);
+    if (result) {
+        strcpy(result, s1);
+        strcat(result, s2);
     }
-}*/
+    return result;
+}
+
+char *get_cmd_path(char *cmd, char *path) {
+    if (!cmd || !path) return NULL;
+    char *res = NULL;
+    char *path_dup = strdup(path);
+    char *token = strtok(path_dup, ":");
+
+    while (token != NULL) {
+        res = str_joiner(token, "/");
+        char *full_path = str_joiner(res, cmd);
+        free(res);
+
+        if (access(full_path, F_OK | X_OK) == 0) {
+            free(path_dup);
+            return full_path;
+        }
+        free(full_path);
+        token = strtok(NULL, ":");
+    }
+    free(path_dup);
+    return NULL;
+}
 
 
 /*
@@ -118,8 +130,36 @@ int (*builtinFunc[])(char **) = {
     &exitShell
   };
 
-parseAndExecute(List *lp) { 
-
+void parseAndExecute(Command* head, char **envp) {
+  Command* current = head;
+  while (current != NULL) {
+    if (current->type == CMD_BUILTIN) {
+      for (int i = 0; i < numBuiltins(); i++) {
+        if (strcmp(current->command, builtinStr[i]) == 0) {
+          (*builtinFunc[i])(current->options);
+          break;
+        }
+      }
+    } else {
+      pid_t pid = fork();
+      if (pid == 0) {
+        // Child process
+        if (execve(current->commandPath, current->options, envp) == -1) {
+           // If execvp returns, an error occurred
+          perror("execvp");
+          exit(EXIT_FAILURE);
+          //clean data here
+        }
+      } else if (pid > 0) {
+        // Parent process
+        wait(NULL);
+      } else {
+        // Fork failed
+        perror("fork");
+      }
+    }
+    current = current->next;
+    }
 }
 
 /**
@@ -143,6 +183,9 @@ bool parseExecutable(List *lp, Command **head)
   // for now, not optimal
   char* executableName = (*lp)->t;
   Command* newCmd = createCommand(executableName);
+  char *path = getenv("PATH");
+  newCmd->commandPath = get_cmd_path(newCmd->command, path);
+
   printf("newCmd: %s\n", newCmd->command);
 
   printf("head pointer before if: %p\n", *head);

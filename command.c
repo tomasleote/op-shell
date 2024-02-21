@@ -87,6 +87,7 @@ void printCommands(const Command* command) {
         printf("Command: %s\n", command->command);
         for (int i = 0; i < command->optionCount; i++) {
             printf("Option %d: %s\n", i + 1, command->options[i]);
+            printf("Command path: %s\n", command->commandPath);
         }
         command = command->next;
     }
