@@ -11,19 +11,6 @@ int main(int argc, char *argv[]) {
     List tokenList;
     int status;
 
-    if(isatty(STDIN_FILENO)) {
-        char cwd[1024]; 
-        getcwd(cwd, sizeof(cwd));
-        char *username = getlogin();
-        char hostname[1024];
-        gethostname(hostname, sizeof(hostname));
-        printf("Welcome to the shell!\n");
-        printf("%s@%s:%s$ ", username, hostname, cwd);
-    } else {
-        printf("Non-interactive mode detected!\n");
-        //test
-    }
-
     while (true) {
         inputLine = readInputLine();
         printf("Input was: %s\n", inputLine);
@@ -41,7 +28,6 @@ int main(int argc, char *argv[]) {
         printf("Parsed successfully: %d\n", parsedSuccessfully);
         if (tokenList == NULL && parsedSuccessfully) {
             
-            printList(tokenList);
             // Input was parsed successfully and can be accessed in "tokenList"
 
             // However, this is still a simple list of strings, it might be convenient
