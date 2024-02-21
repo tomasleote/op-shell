@@ -26,6 +26,6 @@ void addOptionToCommand(Command* command, char* option);
 void freeCommand(Command* command);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
-void printCommands(const Command* command);
+void printCommands(Command* command);
 
 #endif // COMMAND_H

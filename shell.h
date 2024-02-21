@@ -3,6 +3,6 @@
 
 #include <stdbool.h>
 
-bool parseInputLine(List *lp);
+Command *parseInputLine(List *lp, int *parsedSuccessfully);
 
 #endif

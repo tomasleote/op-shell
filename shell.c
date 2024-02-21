@@ -132,32 +132,32 @@ int (*builtinFunc[])(char **) = {
 
 void parseAndExecute(Command* head, char **envp) {
   Command* current = head;
-  while (current != NULL) {
-    if (current->type == CMD_BUILTIN) {
-      for (int i = 0; i < numBuiltins(); i++) {
-        if (strcmp(current->command, builtinStr[i]) == 0) {
-          (*builtinFunc[i])(current->options);
-          break;
+  while (current) {
+      if (current->type == CMD_BUILTIN) {
+        for (int i = 0; i < numBuiltins(); i++) {
+          if (strcmp(current->command, builtinStr[i]) == 0) {
+            (*builtinFunc[i])(current->options);
+            break;
+          }
+        }
+      } else 
+      {
+        pid_t pid = fork();
+        if (pid == -1) {
+          perror("fork");
+          return ;
+        }
+        if (pid == 0) {
+          if (execve(current->commandPath, current->options, envp) == -1) {
+            perror("execvp");
+            exit(EXIT_FAILURE);
+            //clean data here
+          }
+        } else if (pid > 0) {
+          // Parent process
+          wait(NULL);
         }
       }
-    } else {
-      pid_t pid = fork();
-      if (pid == 0) {
-        // Child process
-        if (execve(current->commandPath, current->options, envp) == -1) {
-           // If execvp returns, an error occurred
-          perror("execvp");
-          exit(EXIT_FAILURE);
-          //clean data here
-        }
-      } else if (pid > 0) {
-        // Parent process
-        wait(NULL);
-      } else {
-        // Fork failed
-        perror("fork");
-      }
-    }
     current = current->next;
     }
 }
@@ -187,6 +187,7 @@ bool parseExecutable(List *lp, Command **head)
   newCmd->commandPath = get_cmd_path(newCmd->command, path);
 
   printf("newCmd: %s\n", newCmd->command);
+  printf("newCmd path: %s\n", newCmd->commandPath);
 
   printf("head pointer before if: %p\n", *head);
   if (*head == NULL) {
@@ -427,15 +428,13 @@ bool parseInputLineInternal(List* lp, Command** head) {
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the inputline was parsed successfully.
  */
-bool parseInputLine(List *lp)
+Command *parseInputLine(List *lp, int *parsedSuccessfully)
 {
   Command* head = NULL;
 
   // Call the internal parsing function with the head pointer
   bool result = parseInputLineInternal(lp, &head);
-
+  parsedSuccessfully = true;
   printCommands(head);
-  
-  //free command struct and its options
-  return true;
+  return (head);
 }

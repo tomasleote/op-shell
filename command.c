@@ -82,7 +82,7 @@ void deleteCommand(Command** head, Command* command) {
 }
 
 // Example function to print the command list (for debugging purposes)
-void printCommands(const Command* command) {
+void printCommands(Command* command) {
     while (command != NULL) {
         printf("Command: %s\n", command->command);
         for (int i = 0; i < command->optionCount; i++) {
