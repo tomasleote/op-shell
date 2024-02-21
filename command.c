@@ -8,10 +8,12 @@
 */
 Command* createCommand(char* commandName) {
     Command* cmd = (Command*)malloc(sizeof(Command));
+    
     if (cmd == NULL) {
         // Handle memory allocation failure
         return NULL;
     }
+
     cmd->command = strdup(commandName); // Duplicate the string to ensure the Command owns its copy
     cmd->options = NULL;
     cmd->optionCount = 0;

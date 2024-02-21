@@ -5,6 +5,32 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+/*
+  Builtin function implementations. Check this later
+*/
+int cd(char **args)
+{
+  printf("Changing directory\n");
+  if (args[1] == NULL)
+  {
+    fprintf(stderr, "expected argument to \"cd\"\n");
+  }
+  else
+  {
+    if (chdir(args[1]) != 0)
+    {
+      perror("shell");
+    }
+  }
+  return 1;
+}
+
+int exitShell(char **args)
+{
+  printf("Exiting shell\n");
+  return 0;
+}
+
 /**
  * The function acceptToken checks whether the current token matches a target identifier,
  * and goes to the next token if this is the case.
@@ -36,31 +62,9 @@ int numBuiltins()
 
 int (*builtinFunc[])(char **) = {
     &cd,
-    &exit};
+    &exitShell
+    };
 
-/*
-  Builtin function implementations. Check this later
-*/
-int cd(char **args)
-{
-  if (args[1] == NULL)
-  {
-    fprintf(stderr, "expected argument to \"cd\"\n");
-  }
-  else
-  {
-    if (chdir(args[1]) != 0)
-    {
-      perror("shell");
-    }
-  }
-  return 1;
-}
-
-int exit(char **args)
-{
-  return 0;
-}
 
 void parseAndExecute(List *tokenList)
 {
@@ -85,6 +89,14 @@ bool parseExecutable(List *lp)
   // more sense, and defer the binary existence check to the runtime part
   // you'll write later.
 
+  // for now, not optimal
+  int i;
+  for (i = 0; i < numBuiltins(); i++) {
+      if (strcmp(lp[0], builtinStr[i]) == 0) {
+        return (builtinFunc[i])(lp);
+      }
+  }
+
   if (*lp == NULL)
   {
     return false;
@@ -95,15 +107,7 @@ bool parseExecutable(List *lp)
   // the ta's advice was to launch the command either
   // after parsing the command, not executable
 
-  // for now, not optimal
-  //  int i;
-  //  for (i = 0; i < numBuiltins(); i++) {
-  //      if (strcmp(lp[0], builtinStr[i]) == 0) {
-  //          return (builtinFunc[i])(lp);
-  //      }
-  //  }
-
-  // return launch(lp);
+  return launch(lp);
 }
 
 /**
@@ -300,6 +304,7 @@ bool parseBuiltIn(List *lp)
   for (int i = 0; builtIns[i] != NULL; i++)
   {
     if (acceptToken(lp, builtIns[i]))
+    
       return true;
   }
 
