@@ -85,9 +85,8 @@ void deleteCommand(Command** head, Command* command) {
 void printCommands(Command* command) {
     while (command != NULL) {
         printf("Command: %s\n", command->command);
-        for (int i = 0; i < command->optionCount; i++) {
+        for (int i = 1; i < command->optionCount; i++) {
             printf("Option %d: %s\n", i + 1, command->options[i]);
-            printf("Command path: %s\n", command->commandPath);
         }
         command = command->next;
     }

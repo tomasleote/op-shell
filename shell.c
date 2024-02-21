@@ -148,6 +148,8 @@ void parseAndExecute(Command* head, char **envp) {
           return ;
         }
         if (pid == 0) {
+          //printf("cmd: %s, cmd->path: %s\n", current->command, current->commandPath);
+          //printCommands(current);
           if (execve(current->commandPath, current->options, envp) == -1) {
             perror("execvp");
             exit(EXIT_FAILURE);
