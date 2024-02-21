@@ -1,65 +1,93 @@
 #include "command.h"
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * The function createCommand creates a new Command structure.
- * @param commandName the name of the command
-*/
+// Function to create a new command
 Command* createCommand(char* commandName) {
-    Command* cmd = (Command*)malloc(sizeof(Command));
-    
-    if (cmd == NULL) {
-        // Handle memory allocation failure
-        return NULL;
+    Command* newCommand = (Command*)malloc(sizeof(Command));
+    if (newCommand == NULL) {
+        perror("Unable to allocate memory for new command");
+        exit(EXIT_FAILURE);
     }
 
-    cmd->command = strdup(commandName); // Duplicate the string to ensure the Command owns its copy
-    cmd->options = NULL;
-    cmd->optionCount = 0;
-    return cmd;
+    newCommand->command = strdup(commandName);
+    newCommand->commandPath = NULL; // Initially NULL, can be set later
+    newCommand->next = NULL;
+    newCommand->previous = NULL;
+    newCommand->type = CMD_EXTERNAL; // Default to external command; 
+    memset(newCommand->redirections, 0, sizeof(newCommand->redirections));
+    memset(newCommand->pipes, 0, sizeof(newCommand->pipes));
+    newCommand->options = NULL;
+    newCommand->optionCount = 0;
+
+    return newCommand;
 }
 
-/**
- * The function addOptionToCommand adds an option to a Command structure.
- * @param cmd the Command structure to add the option to
- * @param option the option to add
-*/
-void addOptionToCommand(Command* cmd, char* option) {
-    if (cmd == NULL || option == NULL) {
-        // Handle null pointer
-        return;
+// Function to add an option to a command
+void addOptionToCommand(Command* command, char* option) {
+    command->options = realloc(command->options, sizeof(char*) * (command->optionCount + 1));
+    if (command->options == NULL) {
+        perror("Unable to reallocate memory for options");
+        exit(EXIT_FAILURE);
     }
-    // Resize the options array to hold one more pointer
-    char** newOptions = (char**)realloc(cmd->options, sizeof(char*) * (cmd->optionCount + 1));
-    if (newOptions == NULL) {
-        // Handle memory allocation failure
-        return;
-    }
-    cmd->options = newOptions;
-    cmd->options[cmd->optionCount] = strdup(option); // Duplicate the option string
-    cmd->optionCount++;
+    command->options[command->optionCount] = strdup(option);
+    command->optionCount++;
 }
 
-/**
- * The function freeCommand frees the memory allocated for a Command structure.
- * @param cmd the Command structure to free
-*/
-void freeCommand(Command* cmd) {
-    if (cmd == NULL) {
-        return;
+// Function to free a command and its associated resources
+void freeCommand(Command* command) {
+    if (command != NULL) {
+        free(command->command);
+        free(command->commandPath);
+        for (int i = 0; i < command->optionCount; i++) {
+            free(command->options[i]);
+        }
+        free(command->options);
+        free(command);
     }
-    // Free the command string
-    free(cmd->command);
-    // Free each option string
-    for (int i = 0; i < cmd->optionCount; i++) {
-        free(cmd->options[i]);
-    }
-    // Free the options array itself
-    free(cmd->options);
-    // Finally, free the Command structure
-    free(cmd);
 }
 
+// Function to append a command to the end of a list
+void appendCommand(Command** head, Command* newCommand) {
+    if (*head == NULL) {
+        *head = newCommand;
+    } else {
+        Command* last = *head;
+        while (last->next != NULL) {
+            last = last->next;
+        }
+        last->next = newCommand;
+        newCommand->previous = last;
+    }
+}
 
-//TODO: Implement createCommand, addOptionToCommand, and freeCommand
+// Function to delete a command from the list
+void deleteCommand(Command** head, Command* command) {
+    if (*head == NULL || command == NULL) return;
+
+    if (*head == command) {
+        *head = command->next;
+    }
+
+    if (command->next != NULL) {
+        command->next->previous = command->previous;
+    }
+
+    if (command->previous != NULL) {
+        command->previous->next = command->next;
+    }
+
+    freeCommand(command);
+}
+
+// Example function to print the command list (for debugging purposes)
+void printCommands(const Command* command) {
+    while (command != NULL) {
+        printf("Command: %s\n", command->command);
+        for (int i = 0; i < command->optionCount; i++) {
+            printf("Option %d: %s\n", i + 1, command->options[i]);
+        }
+        command = command->next;
+    }
+}

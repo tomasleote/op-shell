@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
         inputLine = readInputLine();
         printf("Input was: %s\n", inputLine);
          // Check if EOF is encountered or "exit" command is given
-        if (inputLine == NULL || strcmp(inputLine, "exit") == 0) {
+        if (inputLine == NULL) {
             free(inputLine);
             break; // Exit the loop
         }
@@ -38,8 +38,9 @@ int main(int argc, char *argv[]) {
         printList(tokenList);
 
         bool parsedSuccessfully = parseInputLine(&tokenList);
+        printf("Parsed successfully: %d\n", parsedSuccessfully);
         if (tokenList == NULL && parsedSuccessfully) {
-            printf("Token list after parsing is: ");
+            
             printList(tokenList);
             // Input was parsed successfully and can be accessed in "tokenList"
 
