@@ -70,6 +70,7 @@ void executeBuiltIns(Command* current) {
  * @param envp The environment variables.
 */
 void executeCommand(Command* current, char **envp) {
+  
   pid_t pid = fork();
   
   if (pid == -1) {
@@ -80,7 +81,7 @@ void executeCommand(Command* current, char **envp) {
   if (pid == 0) {
     addCommandToOptions(current);
     if (execvp(current->command, current->options) == -1) {
-      perror("execvp");
+      perror("Error: command not found!");
       exit(EXIT_FAILURE);
       //clean data here
     }

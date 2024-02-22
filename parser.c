@@ -9,6 +9,42 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
+//TODO: Finish implementing this, not working yet
+bool isValidSyntax(List lp) {
+    bool openQuote = false;
+    char quoteChar = '\0';
+
+    while (lp != NULL) {
+        char *token = lp->t; // Correctly dereferencing to get the token
+        // Check for the presence of quotes in the token
+        for (int i = 0; token[i] != '\0'; i++) {
+            if (token[i] == '"' || token[i] == '\'') {
+                if (!openQuote) {
+                    // Opening quote found
+                    openQuote = true;
+                    quoteChar = token[i];
+                } else if (quoteChar == token[i]) {
+                    // Closing quote found
+                    openQuote = false;
+                }
+            }
+        }
+
+        lp = lp->next; // Move to the next token in the list
+    }
+
+    // If we've reached the end and a quote is still open, syntax is invalid
+    if (openQuote) {
+        printf("! Error: invalid syntax!\n");
+        return false;
+    }
+
+    printf("Syntax is valid!\n");
+    return true;
+}
+
+
+
 /**
  * Joins two strings together.
  * @param s1 first string.
@@ -112,6 +148,11 @@ bool parseCommand(List *lp, Command** head) {
  * @return a bool denoting whether the executable was parsed successfully.
  */
 bool parseExecutable(List *lp, Command **head) {
+
+  if (!isValidSyntax(*lp)) {
+        printf("! Error: invalid syntax!\n");
+        return false;
+    }
   
   char* executableName = (*lp)->t;
   Command* newCmd = createCommand(executableName);
