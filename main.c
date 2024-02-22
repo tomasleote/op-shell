@@ -5,6 +5,7 @@
 #include "command.h"
 #include "scanner.h"
 #include "shell.h"
+#include "parser.h"
 
 int main(int argc, char *argv[],  char **envp) {
     char *inputLine;
