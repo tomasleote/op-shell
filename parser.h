@@ -3,9 +3,10 @@
 
 #include "command.h" // Include the command struct definition
 #include "scanner.h" // Assuming you have a scanner for tokenizing the input
+#include <stdbool.h> // Include the bool type
 
 // Function prototypes
-bool parseInputLine(List *lp, int *parsedSuccessfully);
+Command* parseInputLine(List *lp, int *parsedSuccessfully);
 bool parseCommand(List *lp, Command** head);
 bool parseExecutable(List *lp, Command **head);
 bool parseOptions(List *lp, Command** head);

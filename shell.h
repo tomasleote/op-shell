@@ -1,8 +1,14 @@
-#ifndef SHELL_SHELL_H
-#define SHELL_SHELL_H
+#ifndef SHELL_H
+#define SHELL_H
 
-#include <stdbool.h>
+#include "command.h" // For Command struct
 
-Command *parseInputLine(List *lp, int *parsedSuccessfully);
 
-#endif
+// Function prototypes
+int exitShell(char **args);
+void execute(Command* head, char **envp);
+void executeBuiltIns(char **args);
+void executeCommand(Command* current, char **envp);
+
+#endif // SHELL_H
+

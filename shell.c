@@ -1,11 +1,12 @@
 #include <stdbool.h>
 #include <string.h>
-
 #include "scanner.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include "command.h"
+#include "shell.h"
+#include <sys/wait.h>
 
 
 int exitShell(char **args) {
@@ -62,7 +63,7 @@ void executeBuiltIns(char **args) {
  * @param current The command to execute.
  * @param envp The environment variables.
 */
-void executeCommand( Command* current, char **envp) {
+void executeCommand(Command* current, char **envp) {
   pid_t pid = fork();
   
   if (pid == -1) {

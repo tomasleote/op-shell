@@ -271,7 +271,7 @@ bool parseFileName(List *lp) {
   if (fileName == NULL) {
     return false;
   }
-  lp = (*lp)->next;
+  (*lp) = (*lp)->next;
   return true;
 }
 
@@ -312,7 +312,7 @@ Command *parseInputLine(List *lp, int *parsedSuccessfully) {
 
   // Call the internal parsing function with the head pointer
   bool result = parseInputLineInternal(lp, &head);
-  parsedSuccessfully = true;
+  *parsedSuccessfully = 1;
   printCommands(head);
   return (head);
 }

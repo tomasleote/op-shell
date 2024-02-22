@@ -6,6 +6,8 @@
 #ifndef GRAMMAR_TOKENS_H
 #define GRAMMAR_TOKENS_H
 
+#include <stdbool.h>
+
 // Define token types according to the shell grammar
 typedef enum {
     TOKEN_EXECUTABLE,  // Represents an executable path or file in $PATH

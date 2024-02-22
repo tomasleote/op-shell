@@ -7,27 +7,36 @@
 #include "shell.h"
 #include "parser.h"
 
+/**
+ * Main function of the shell.
+ * @param argc Number of arguments.
+ * @param argv List of arguments.
+ * @param envp The environment variables.
+ * @return 0 if successful.
+ */
 int main(int argc, char *argv[],  char **envp) {
     char *inputLine;
     List tokenList;
     Command *newTokenList;
     int status;
-    bool parsedSuccessfully = true;
+    int parsedSuccessfully = 0;
 
     while (true) {
         inputLine = readInputLine();
-         // Check if EOF is encountered or "exit" command is given
+        
         if (inputLine == NULL) {
             free(inputLine);
             break; // Exit the loop
         }
 
         tokenList = getTokenList(inputLine);
-        printList(tokenList);
 
         newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
+       
         if (tokenList == NULL && parsedSuccessfully) {
-            parseAndExecute(newTokenList, envp);
+            printf("Parsed successfully, linkedList: \n");
+            printCommands(newTokenList);
+            execute(newTokenList, envp);
         } else {
             printf("Error: invalid syntax!\n");
         }
