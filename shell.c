@@ -14,20 +14,6 @@ int exitShell(char **args) {
   exit(0);
 }
 
-/*
-  List of builtin commands, followed by their corresponding functions.
- */
-char *builtinStr[] = {
-    "exit"};
-
-int numBuiltins() {
-  return sizeof(builtinStr) / sizeof(char *);
-}
-
-int (*builtinFunc[])(char **) = {
-    &exitShell
-};
-
 /**
  * Executes the linked list.
  * @param head pointer to current element to execute.
@@ -37,8 +23,10 @@ void execute(Command* head, char **envp) {
   Command* current = head;
   while (current) {
       if (current->type == CMD_BUILTIN) {
-        executeBuiltIns(current->options);
+        //printf("Executing built-in %s\n", current->command);
+        executeBuiltIns(current);
       } else {
+        //printf("Executing command %s\n", current->command);
         executeCommand(current, envp);
       }
     current = current->next;
@@ -49,13 +37,13 @@ void execute(Command* head, char **envp) {
  * Executes built-in commands.
  * @param args List of arguments.
 */
-void executeBuiltIns(char **args) {
-  for (int i = 0; i < numBuiltins(); i++) {
-    if (strcmp(args[0], builtinStr[i]) == 0) {
-      (*builtinFunc[i])(args);
-      return;
+void executeBuiltIns(Command* current) {
+  
+  if (strcmp(current->command, "exit") == 0) {
+        exitShell(current->options);
+    } else {
+        printf("Unknown command: %s\n", current->command);
     }
-  }
 }
 
 /**
@@ -72,9 +60,8 @@ void executeCommand(Command* current, char **envp) {
   }
   
   if (pid == 0) {
-    //printf("cmd: %s, cmd->path: %s\n", current->command, current->commandPath);
-    //printCommands(current);
-    if (execve(current->commandPath, current->options, envp) == -1) {
+    addCommandToOptions(current);
+    if (execvp(current->command, current->options) == -1) {
       perror("execvp");
       exit(EXIT_FAILURE);
       //clean data here
@@ -85,3 +72,13 @@ void executeCommand(Command* current, char **envp) {
         }
 }
 
+void addCommandToOptions (Command* current) {
+  // Create an array for execvp arguments
+  char **args = malloc((current->optionCount + 2) * sizeof(char*)); // +2 for command and NULL terminator
+  args[0] = current->command; // Set command as first argument
+  for (int i = 0; i < current->optionCount; i++) {
+    args[i + 1] = current->options[i]; // Copy options
+  }
+  args[current->optionCount + 1] = NULL; // NULL-terminate the array
+  current->options = args;
+}

@@ -34,8 +34,7 @@ int main(int argc, char *argv[],  char **envp) {
         newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
        
         if (tokenList == NULL && parsedSuccessfully) {
-            printf("Parsed successfully, linkedList: \n");
-            printCommands(newTokenList);
+            //printCommands(newTokenList);
             execute(newTokenList, envp);
         } else {
             printf("Error: invalid syntax!\n");

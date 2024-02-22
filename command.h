@@ -27,5 +27,6 @@ void freeCommand(Command* command);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
 void printCommands(Command* command);
+void printCommand(Command* command);
 
 #endif // COMMAND_H

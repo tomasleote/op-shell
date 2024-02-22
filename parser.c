@@ -138,6 +138,7 @@ bool parseOptions(List *lp, Command** head) {
   if (*head == NULL) return false;
 
   Command* currentCmd = *head;
+
   while (currentCmd->next != NULL) {
     currentCmd = currentCmd->next;
   }
@@ -313,6 +314,5 @@ Command *parseInputLine(List *lp, int *parsedSuccessfully) {
   // Call the internal parsing function with the head pointer
   bool result = parseInputLineInternal(lp, &head);
   *parsedSuccessfully = 1;
-  printCommands(head);
   return (head);
 }

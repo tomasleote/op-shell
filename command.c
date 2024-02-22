@@ -81,13 +81,24 @@ void deleteCommand(Command** head, Command* command) {
     freeCommand(command);
 }
 
+// Example function to print a single command (for debugging purposes)
+void printCommand(Command* command) {
+    printf("Command: %s\n", command->command);
+    printf("Type: %d\n", command->type);  
+
+    if (command->commandPath != NULL) {
+        printf("Command Path: %s\n", command->commandPath);
+    }
+
+    for (int i = 0; i < command->optionCount; i++) {
+        printf("Option %d: %s\n", i + 1, command->options[i]);
+    }
+}
+
 // Example function to print the command list (for debugging purposes)
 void printCommands(Command* command) {
     while (command != NULL) {
-        printf("Command: %s\n", command->command);
-        for (int i = 1; i < command->optionCount; i++) {
-            printf("Option %d: %s\n", i + 1, command->options[i]);
-        }
+        printCommand(command);
         command = command->next;
     }
 }
