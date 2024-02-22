@@ -8,11 +8,26 @@
 #include "shell.h"
 #include <sys/wait.h>
 
+int lastExitStatus = 0; 
 
+/**
+ * Exits the shell
+ * @param args List of arguments.
+*/
 int exitShell(char **args) {
   printf("Exiting shell!\n");
   exit(0);
 }
+
+/**
+ * Prints the most recent exit status.
+ * @param args List of arguments.
+*/
+int statusShell(char **args) {
+    printf("The most recent exit code is: %d\n", lastExitStatus);
+    return 1; // Indicate success, shell continues running
+}
+
 
 /**
  * Executes the linked list.
@@ -20,6 +35,7 @@ int exitShell(char **args) {
  * @param envp The environment variables.
 */
 void execute(Command* head, char **envp) {
+  // lastExitStatus = 0;
   Command* current = head;
   while (current) {
       if (current->type == CMD_BUILTIN) {
@@ -41,9 +57,11 @@ void executeBuiltIns(Command* current) {
   
   if (strcmp(current->command, "exit") == 0) {
         exitShell(current->options);
-    } else {
+  } else if (strcmp(current->command, "status") == 0) {
+        statusShell(current->options);
+  } else {
         printf("Unknown command: %s\n", current->command);
-    }
+  }
 }
 
 /**
@@ -67,9 +85,14 @@ void executeCommand(Command* current, char **envp) {
       //clean data here
     }
   } else if (pid > 0) {
-          // Parent process
-          wait(NULL);
-        }
+    int status;
+    waitpid(pid, &status, 0); // Wait for the command to complete
+    
+    // if (WIFEXITED(status)) {
+        lastExitStatus = WEXITSTATUS(status); // Update global status
+    // }
+  }
+      
 }
 
 void addCommandToOptions (Command* current) {
