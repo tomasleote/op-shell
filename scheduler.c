@@ -1,8 +1,10 @@
 #include "scheduler.h"
 #include "list.h"
+#include "event.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <stdbool.h>
 
 // At this point we know that the execution order is correct, but for some reason avg turnaround time is incorrect. TODO: Check math
 
@@ -15,6 +17,12 @@ static List* ioQueue = NULL; // Queue for processes waiting for I/O operations
 static double totalTurnaroundTime = 0; // Sum of turnaround times for all processes
 static int totalProcesses = 0; // Total number of processes handled
 static List *processList = NULL; // List of all processes
+Event* eventQueue;
+
+static bool cpuIsIdle = true; // Initially, the CPU is idle.
+static int cpuNextFreeTime = 0; // Next time the CPU is expected to be free.
+static bool ioIsIdle = true; // Initially, the IO device is idle.
+static int ioNextFreeTime = 0; // Next time the IO device is expected to be free.
 
 void printLists(const char* listName, List* list) {
     printf("Contents of %s:\n", listName);
@@ -34,6 +42,36 @@ void debugPrintAllLists() {
     printLists("Process List", processList);
 }
 
+void insertEvent(Event** eventQueue, Event* newEvent) {
+    Event* current = *eventQueue;
+    Event* previous = NULL;
+    
+    if(newEvent->type == CPU_START) {
+        if (!cpuIsIdle && cpuNextFreeTime > newEvent->time) {
+            newEvent->time = cpuNextFreeTime;
+        }
+        // Assuming we update the CPU state when handling the actual event
+    } else if (newEvent->type == IO_START) {
+        if (!ioIsIdle && ioNextFreeTime > newEvent->time) {
+            newEvent->time = ioNextFreeTime;
+        }
+        // Assuming we update the IO state when handling the actual event
+    }
+
+    while (current != NULL && (current->time < newEvent->time || (current->time == newEvent->time && current->type <= newEvent->type))) {
+        previous = current;
+        current = current->next;
+    }
+
+    if (previous == NULL) {
+        newEvent->next = *eventQueue;
+        *eventQueue = newEvent;
+    } else {
+        newEvent->next = previous->next;
+        previous->next = newEvent;
+    }
+}
+
 /**
  * Function to finalize the completion of a process
  * @param process the process that has completed
@@ -49,8 +87,7 @@ void finalizeProcessCompletion(Process* process) {
     
     totalProcesses++; // Increment the total number of processes handled
 
-    //printf("Process with arrival time %d completed with waiting time %.0lf\n", process->arrivalTime, waitingTime);
-
+    printf("Process %d completed with waiting time %.0lf\n", process->id, waitingTime);
     removeProcess(processList, process); // Ensure this removes the process correctly
     //printf("Process with arrival time %d removed from process list.\n", process->arrivalTime);
     //debugPrintAllLists();
@@ -81,193 +118,148 @@ void initScheduler(List* processLis) {
     }
 
     processList = processLis;
+    eventQueue = NULL; 
 }
 
-void executeIOProcess(Process* process) {
-    if (process == NULL || process->numCycles <= 0) {
-        printf("No I/O process to execute or process has no remaining I/O bursts.\n");
+void handleIOStartEvent(Process* process) {
+    if (process == NULL) {
+        printf("No process to start I/O operation.\n");
+        return;
+    }
+    
+    ioIsIdle = false; 
+
+    int ioBurstTime = process->ioTimes[0];
+    ioNextFreeTime = currentTime + ioBurstTime; 
+    printf("Starting I/O operation for Process %d for %d ticks at time %d.\n", process->id, ioBurstTime, currentTime);
+    ioTime += ioBurstTime; // Add this I/O burst's duration to the global I/O time
+
+    // Create an IO_COMPLETION event for when this burst is expected to finish
+    Event* ioCompletionEvent = createEvent(currentTime + ioBurstTime, IO_COMPLETION, process);
+    insertEvent(&eventQueue, ioCompletionEvent);
+
+    // Shift I/O times left, effectively "removing" the executed burst
+    for (int i = 1; i < process->numCycles; i++) {
+        process->ioTimes[i - 1] = process->ioTimes[i];
+    }
+    process->numCycles--; // Decrement the number of remaining cycles for the I/O operations
+}
+
+
+void handleIOCompletionEvent(Process* process) {
+    if (process == NULL) {
+        printf("Attempted to handle I/O completion for a null process.\n");
         return;
     }
 
+    ioIsIdle = true; 
+
+    // Check if there are more cycles (CPU operations) to perform after this I/O completion
     if (process->numCycles > 0) {
-        int ioBurstTime = process->ioTimes[0];
-        printf("Executing process with id %d for %d ticks on IO.\n", process->id, ioBurstTime);
-
-        ioTime += ioBurstTime; // Increment global I/O time
-
-        // Remove the executed I/O burst from the process, similar to executeCPUProcess
-        for (int i = 0; i < process->numCycles - 1; i++) {
-            process->ioTimes[i] = process->ioTimes[i + 1];
-        }
-        process->numCycles--;
-
-        if (process->numCycles > 0) {
-            removeProcess(ioQueue, process);
-            //printf("Process %d moved to I/O queue.\n", process->id);
-            insertProcess(readyQueue, process); // Move back to ready queue if more CPU bursts
-        } else {
-            removeProcess(ioQueue, process);
-            finalizeProcessCompletion(process); // Finalize if no more bursts
-        }
+        printf("Process %d completed an I/O operation at time %d. Scheduling next CPU burst.\n", process->id, currentTime);
+        Event* cpuStartEvent = createEvent(fmax(currentTime, cpuNextFreeTime), CPU_START, process);
+        insertEvent(&eventQueue, cpuStartEvent);
     } else {
-        printf("Process has no more I/O bursts.\n");
-    }
-}
-
-
-void checkAndMoveToIOQueue(Process* process) {
-    if (process->numCycles > 0) { // Check if there's a next I/O burst
-        insertProcess(ioQueue, process);
-        printf("Process %d moved to I/O queue.\n", process->id);
-    } else {
-        // This might be redundant if handled in executeCPUProcess or executeIOProcess
+        // If the process has no remaining cycles, it means it has completed all its work.
+        printf("Process %d has completed all its CPU and I/O operations at time %d.\n", process->id, currentTime);
         finalizeProcessCompletion(process);
     }
 }
 
-// Simulates the execution of a process's CPU burst
-void executeCPUProcess(Process* process) {
 
+void handleCPUCompletionEvent(Process* process) {
     if (process == NULL) {
-        printf("No process to execute.\n");
+        printf("Attempted to handle CPU completion for a null process.\n");
         return;
     }
 
-    if (process->numCycles > 0) {
-        int cpuBurstTime = process->cpuTimes[0]; // Get the next CPU burst time
-        printf("Executing process with id %d for %d ticks on CPU.\n", process->id, cpuBurstTime);
-
-        // Simulate the CPU execution by advancing the current time
-        cpuTime += cpuBurstTime;
-
-        // After execution, remove the executed CPU burst from the process
-        for (int i = 1; i < process->numCycles; i++) {
-            process->cpuTimes[i - 1] = process->cpuTimes[i];
-        }
-        process->numCycles--;
-
-        // If this was the last CPU burst, calculate the turnaround time
-        if (process->numCycles == 0) {
-            removeProcess(readyQueue, process);
-            finalizeProcessCompletion(process);
-        } else {
-            removeProcess(readyQueue, process);
-            checkAndMoveToIOQueue(process);
-        }
+    // After a CPU burst, check if there are I/O operations to perform.
+    if (process->numCycles > 0) { 
+        printf("Process %d completed a CPU burst at time %d. Scheduling next I/O operation.\n", process->id, currentTime);
+        Event* ioStartEvent = createEvent(fmax(currentTime, ioNextFreeTime), IO_START, process);
+        insertEvent(&eventQueue, ioStartEvent);
     } else {
-        printf("Process has no more CPU bursts.\n");
+        // If the process has no remaining cycles, it means it has completed all its work.
+        printf("Process %d has completed all its work at time %d.\n", process->id, currentTime);
+        finalizeProcessCompletion(process);
     }
-}
-
-Process* getNextReadyProcess() {
-    if (isListEmpty(readyQueue)) {
-        printf("No process ready for CPU execution.\n");
-        return NULL;
-    }
-
-    Node* current = readyQueue->head;
-    Node* earliestNode = current;
-    while (current != NULL) {
-        if (current->process->arrivalTime < earliestNode->process->arrivalTime) {
-            earliestNode = current;
-        }
-        current = current->next;
-    }
-
-    // Remove the earliestNode from the queue
-    Process* nextProcess = earliestNode->process;
-    removeProcess(readyQueue, nextProcess);
-    return nextProcess;
-}
-
-Process* getNextIOProcess() {
-    if (isListEmpty(ioQueue)) {
-        printf("No process ready for I/O execution.\n");
-        return NULL;
-    }
-
-    Node* current = ioQueue->head;
-    Node* earliestNode = current;
-    while (current != NULL) {
-        if (current->process->arrivalTime < earliestNode->process->arrivalTime) {
-            earliestNode = current;
-        }
-        current = current->next;
-    }
-
-    // Remove the earliestNode from the queue
-    Process* nextProcess = earliestNode->process;
-    removeProcess(ioQueue, nextProcess);
-    return nextProcess;
+    cpuIsIdle = true;
 }
 
 
-
-/**
- * Function to check if any processes have arrived and move them to the ready queue
- * @param currentTime the current time in the simulation
-*/
-void checkAndMoveToReadyQueue(int currentTime) {
-    Node* previous = NULL;
-    Node* current = processList->head;
-
-    while (current != NULL) {
-        Process* process = current->process;
-        // Check if the process has arrived and should be moved to the ready queue
-        if (process->arrivalTime <= currentTime) {
-            // Remove process from processList
-            if (previous == NULL) {
-                processList->head = current->next;
-            } else {
-                previous->next = current->next;
-            }
-            Node* next = current->next;
-
-            // Insert process into the ready queue
-            insertProcess(readyQueue, process);
-            printf("Process %d moved to ready queue.\n", process->id);
-            // Free the current node (but not the process itself)
-            free(current); // Do we really need to free this here if we are assigning a new value after? 
-            current = next;
-        } else {
-            // Only move to the next node if we didn't remove the current one
-            previous = current;
-            current = current->next;
-        }
+void handleCPUStartEvent(Process* process) {
+    if (process == NULL) {
+        printf("No process to start CPU execution.\n");
+        return;
     }
+
+    cpuIsIdle = false;
+
+    // Assuming process->cpuTimes[0] is the current CPU burst time
+    int cpuBurstTime = process->cpuTimes[0];
+    cpuNextFreeTime = currentTime + cpuBurstTime;
+    cpuTime += cpuBurstTime;
+    printf("Starting CPU burst for Process %d for %d ticks at time %d.\n", process->id, cpuBurstTime, currentTime);
+
+    // Create a CPU_COMPLETION event for when this burst is expected to finish
+    Event* cpuCompletionEvent = createEvent(currentTime + cpuBurstTime, CPU_COMPLETION, process);
+    insertEvent(&eventQueue, cpuCompletionEvent);
+
+    // Shift CPU times left, effectively "removing" the executed burst
+    for (int i = 1; i < process->numCycles; i++) {
+        process->cpuTimes[i - 1] = process->cpuTimes[i];
+    }
+    process->numCycles--; // Decrement the number of remaining cycles
 }
 
-/**
- * Function to run the scheduler and execute the processes
- * In theory, works as a main loop for the simulation
-*/
+void handleArrivalEvent(Process* process) {
+    // Create a CPU_START event for the arriving process and insert it into the event queue.
+    Event* cpuStartEvent = createEvent(currentTime, CPU_START, process);
+    insertEvent(&eventQueue, cpuStartEvent);
+    printf("CPU start event for Process %d created and inserted at time %d.\n", process->id, currentTime);
+}
+
 void runScheduler() {
-    int lastTime = currentTime; // Track the last update time for calculating waiting times
 
-    while (!isListEmpty(readyQueue) || !isListEmpty(ioQueue) || !isListEmpty(processList)) {
-    
-        checkAndMoveToReadyQueue(currentTime);
-        
-        Process* cpuProcess = getNextReadyProcess(); // May be NULL if readyQueue is empty
-        Process* ioProcess = getNextIOProcess(); // May be NULL if ioQueue is empty
-
-        // Simulate execution
-        if (cpuProcess != NULL && ioProcess != NULL) {
-            // Determine the shorter duration between CPU and I/O operation
-            int nextEventDuration = fmax(cpuProcess->cpuTimes[0], ioProcess->ioTimes[0]);
-            currentTime += nextEventDuration;
-            executeCPUProcess(cpuProcess);
-            executeIOProcess(ioProcess);
-        } else if (cpuProcess != NULL) {
-            currentTime += cpuProcess->cpuTimes[0];
-            executeCPUProcess(cpuProcess);
-        } else if (ioProcess != NULL) {
-            currentTime += ioProcess->ioTimes[0];
-            executeIOProcess(ioProcess);
-        }
+    // Prepopulate the event queue with process arrival events
+    Node* current = processList->head;
+    while (current != NULL) {
+        insertEvent(&eventQueue, createEvent(current->process->arrivalTime, ARRIVAL, current->process));
+        current = current->next;
     }
 
-    // Calculate and print the average turnaround time
+    // Main event loop
+    while (eventQueue != NULL) {
+        Event* event = popEvent(&eventQueue); // Get the next event
+        printf("Processing event of type %d at time %d.\n", event->type, event->time);
+        currentTime = event->time; // Advance simulation time to the event time
+
+        switch (event->type) {
+            case ARRIVAL:
+                handleArrivalEvent(event->process);
+                break;
+            case CPU_START:
+                // Call a function to handle the start of CPU execution for the process
+                handleCPUStartEvent(event->process);
+                break;
+            case IO_START:
+                // Call a function to handle the start of an I/O operation for the process
+                handleIOStartEvent(event->process);
+                break;
+            case CPU_COMPLETION:
+                // Handle CPU completion and potentially schedule next events for the process
+                handleCPUCompletionEvent(event->process);
+                break;
+            case IO_COMPLETION:
+                // Handle I/O completion and potentially schedule next events for the process
+                handleIOCompletionEvent(event->process);
+                break;
+            }
+
+        freeEvent(event); // Clean up the event after processing
+    }
+
+    // Calculate and print final metrics
     printAverageTurnaroundTime();
 }
 
