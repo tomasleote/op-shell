@@ -1,19 +1,12 @@
 #ifndef PARSER_H
 #define PARSER_H
 
-#include "command.h" // Include the command struct definition
-#include "scanner.h" // Assuming you have a scanner for tokenizing the input
-#include <stdbool.h> // Include the bool type
+#include "list.h"
 
-// Function prototypes
-Command* parseInputLine(List *lp, int *parsedSuccessfully);
-bool parseCommand(List *lp, Command** head);
-bool parseExecutable(List *lp, Command **head);
-bool parseOptions(List *lp, Command** head);
-bool parsePipeline(List *lp, Command** head);
-bool parseChain(List *lp, Command** head);
-bool parseBuiltIn(List *lp, Command **head);
-bool parseRedirections(List *lp);
-bool parseFileName(List *lp);
+
+// Declares the parseInput function which takes a pointer to a List as its parameter
+// This function is responsible for reading input from stdin, parsing it into Process
+// instances, and inserting them into the provided List.
+void parseInput(List* processList);
 
 #endif // PARSER_H

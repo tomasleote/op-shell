@@ -1,48 +1,28 @@
-#include <stdlib.h>
+#include "list.h"
+#include "parser.h" 
 #include <stdio.h>
-#include <stdbool.h>
-#include <unistd.h> 
-#include "command.h"
-#include "scanner.h"
-#include "shell.h"
-#include "parser.h"
+#include <stdlib.h>
+#include "scheduler.h"
 
-/**
- * Main function of the shell.
- * @param argc Number of arguments.
- * @param argv List of arguments.
- * @param envp The environment variables.
- * @return 0 if successful.
- */
-int main(int argc, char *argv[],  char **envp) {
-    char *inputLine;
-    List tokenList;
-    Command *newTokenList;
-    int status;
-    int parsedSuccessfully = 0;
-
-    while (true) {
-        inputLine = readInputLine();
-        
-        if (inputLine == NULL) {
-            free(inputLine);
-            break; // Exit the loop
-        }
-
-        tokenList = getTokenList(inputLine);
-
-        newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
-       
-        if (tokenList == NULL && parsedSuccessfully) {
-            //printCommands(newTokenList);
-            execute(newTokenList, envp);
-        } else {
-            printf("Error: invalid syntax!\n");
-        }
-
-        free(inputLine);
-        freeTokenList(tokenList);
+int main() {
+    List* processList = createList();
+    if (!processList) {
+        fprintf(stderr, "Failed to create a process list.\n");
+        return EXIT_FAILURE;
     }
-    
-    return 0;
+
+    // Use parseInput to fill the process list from stdin
+    parseInput(processList);
+
+    // Debug: Print the list to verify correct parsing and structuring
+    //printList(processList);
+
+    // Missing scheduler implementation.
+    initScheduler(processList);
+    runScheduler();
+
+    // Clean up and free allocated memory
+    freeList(processList);
+
+    return EXIT_SUCCESS;
 }
