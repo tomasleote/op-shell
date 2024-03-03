@@ -24,6 +24,7 @@ static int cpuNextFreeTime = 0; // Next time the CPU is expected to be free.
 static bool ioIsIdle = true; // Initially, the IO device is idle.
 static int ioNextFreeTime = 0; // Next time the IO device is expected to be free.
 
+
 void printLists(const char* listName, List* list) {
     printf("Contents of %s:\n", listName);
     Node* current = list->head;
@@ -87,7 +88,7 @@ void finalizeProcessCompletion(Process* process) {
     
     totalProcesses++; // Increment the total number of processes handled
 
-    printf("Process %d completed with waiting time %.0lf\n", process->id, waitingTime);
+    //printf("Process %d completed with waiting time %.0lf\n", process->id, waitingTime);
     removeProcess(processList, process); // Ensure this removes the process correctly
     //printf("Process with arrival time %d removed from process list.\n", process->arrivalTime);
     //debugPrintAllLists();
@@ -131,7 +132,7 @@ void handleIOStartEvent(Process* process) {
 
     int ioBurstTime = process->ioTimes[0];
     ioNextFreeTime = currentTime + ioBurstTime; 
-    printf("Starting I/O operation for Process %d for %d ticks at time %d.\n", process->id, ioBurstTime, currentTime);
+    //printf("Starting I/O operation for Process %d for %d ticks at time %d.\n", process->id, ioBurstTime, currentTime);
     ioTime += ioBurstTime; // Add this I/O burst's duration to the global I/O time
 
     // Create an IO_COMPLETION event for when this burst is expected to finish
@@ -156,12 +157,12 @@ void handleIOCompletionEvent(Process* process) {
 
     // Check if there are more cycles (CPU operations) to perform after this I/O completion
     if (process->numCycles > 0) {
-        printf("Process %d completed an I/O operation at time %d. Scheduling next CPU burst.\n", process->id, currentTime);
+        //printf("Process %d completed an I/O operation at time %d. Scheduling next CPU burst.\n", process->id, currentTime);
         Event* cpuStartEvent = createEvent(fmax(currentTime, cpuNextFreeTime), CPU_START, process);
         insertEvent(&eventQueue, cpuStartEvent);
     } else {
         // If the process has no remaining cycles, it means it has completed all its work.
-        printf("Process %d has completed all its CPU and I/O operations at time %d.\n", process->id, currentTime);
+        //printf("Process %d has completed all its CPU and I/O operations at time %d.\n", process->id, currentTime);
         finalizeProcessCompletion(process);
     }
 }
@@ -173,17 +174,18 @@ void handleCPUCompletionEvent(Process* process) {
         return;
     }
 
+    cpuIsIdle = true;
+
     // After a CPU burst, check if there are I/O operations to perform.
     if (process->numCycles > 0) { 
-        printf("Process %d completed a CPU burst at time %d. Scheduling next I/O operation.\n", process->id, currentTime);
+        //printf("Process %d completed a CPU burst at time %d. Scheduling next I/O operation.\n", process->id, currentTime);
         Event* ioStartEvent = createEvent(fmax(currentTime, ioNextFreeTime), IO_START, process);
         insertEvent(&eventQueue, ioStartEvent);
     } else {
         // If the process has no remaining cycles, it means it has completed all its work.
-        printf("Process %d has completed all its work at time %d.\n", process->id, currentTime);
+        //printf("Process %d has completed all its work at time %d.\n", process->id, currentTime);
         finalizeProcessCompletion(process);
     }
-    cpuIsIdle = true;
 }
 
 
@@ -199,7 +201,7 @@ void handleCPUStartEvent(Process* process) {
     int cpuBurstTime = process->cpuTimes[0];
     cpuNextFreeTime = currentTime + cpuBurstTime;
     cpuTime += cpuBurstTime;
-    printf("Starting CPU burst for Process %d for %d ticks at time %d.\n", process->id, cpuBurstTime, currentTime);
+    //printf("Starting CPU burst for Process %d for %d ticks at time %d.\n", process->id, cpuBurstTime, currentTime);
 
     // Create a CPU_COMPLETION event for when this burst is expected to finish
     Event* cpuCompletionEvent = createEvent(currentTime + cpuBurstTime, CPU_COMPLETION, process);
@@ -216,7 +218,7 @@ void handleArrivalEvent(Process* process) {
     // Create a CPU_START event for the arriving process and insert it into the event queue.
     Event* cpuStartEvent = createEvent(currentTime, CPU_START, process);
     insertEvent(&eventQueue, cpuStartEvent);
-    printf("CPU start event for Process %d created and inserted at time %d.\n", process->id, currentTime);
+    //printf("CPU start event for Process %d created and inserted at time %d.\n", process->id, currentTime);
 }
 
 void runScheduler() {
@@ -231,7 +233,6 @@ void runScheduler() {
     // Main event loop
     while (eventQueue != NULL) {
         Event* event = popEvent(&eventQueue); // Get the next event
-        printf("Processing event of type %d at time %d.\n", event->type, event->time);
         currentTime = event->time; // Advance simulation time to the event time
 
         switch (event->type) {
