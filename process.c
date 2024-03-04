@@ -26,17 +26,16 @@ Process* createProcess(int arrivalTime, int *cpuTimes, int *ioTimes, int ioCycle
 // Function to free a Process instance
 void freeProcess(Process *process) {
     if (process != NULL) {
-        printf("Freeing process with arrival time: %d\n", process->arrivalTime);
+        //printf("Freeing process with arrival time: %d\n", process->arrivalTime);
         if (process->cpuTimes != NULL) {
             free(process->cpuTimes);
-            printf("Freed CPU times for process with arrival time: %d\n", process->arrivalTime);
             process->cpuTimes = NULL; // Prevent double free by nullifying the pointer.
-        } else if (process->ioTimes != NULL) {
+        }
+        
+        if (process->ioTimes != NULL) {
             free(process->ioTimes);
-            printf("Freed I/O times for process with arrival time: %d\n", process->arrivalTime);
             process->ioTimes = NULL; // Same for ioTimes.
         }
         free(process);
-        printf("Finished freeing process with arrival time: %d\n", process->arrivalTime);
     }
 }

@@ -18,7 +18,7 @@ List* createList() {
 void insertProcess(List *list, Process *process) {
     Node *newNode = (Node*)malloc(sizeof(Node));
     if (newNode == NULL) {
-        printf("Memory allocation failed for new process with arrival time: $d. Exiting program", process->arrivalTime);
+        printf("Memory allocation failed for new process with arrival time: %d. Exiting program", process->arrivalTime);
         return;
     }
     newNode->process = process;

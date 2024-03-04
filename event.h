@@ -6,6 +6,8 @@
 // Enum to represent different types of events
 typedef enum {
     ARRIVAL,
+    CPU_READY,
+    IO_READY,
     CPU_START,
     IO_START,
     CPU_COMPLETION,
