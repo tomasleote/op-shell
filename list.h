@@ -19,12 +19,10 @@ typedef struct List {
 // Function prototypes
 List* createList(void); // Create a new empty list
 void insertProcess(List *list, Process *process); // Insert a process at the end (enqueue)
-Process* removeProcess(List *list, Process *process); // Remove a specific process from the list
 Process* dequeueProcess(List *list); // Remove and return the first process in the list (dequeue)
 Process* peekFirstProcess(const List *list); // Get the first process without removing it
 int isListEmpty(const List *list); // Check if the list is empty
 void freeList(List *list); // Free the list and its elements
-void insertProcessAtHead(List* list, Process* process); 
 void printProcess(const Process *process); // Debug function to print process details
 void printList(const List *list); // Debug function to print the list
 
