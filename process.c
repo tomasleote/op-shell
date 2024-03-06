@@ -16,9 +16,10 @@ Process* createProcess(int arrivalTime, int *cpuTimes, int *ioTimes, int ioCycle
     newProcess->ioCycles = ioCycles;
     newProcess->cpuCycles = cpuCycles;
     newProcess->numCycles = numCycles;
-    newProcess->turn = 1; 
     newProcess->totalBurstTime = totalBurstTime;
     newProcess->id = id;
+    newProcess->currentCpuIndex = 0;
+    newProcess->currentIoIndex = 0;
 
     return newProcess;
 }

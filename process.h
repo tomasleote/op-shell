@@ -11,10 +11,11 @@ typedef struct Process {
     int ioCycles; 
     int cpuCycles; 
     int numCycles;  // Number of CPU/I-O cycles in the process
-    int turn;       // 1 = CPU, 0 = I/O   
     int insertedTime; // Time when the process was inserted into the queue
     int totalBurstTime; // Total burst time of the process
     int id; // Process ID
+    int currentCpuIndex; // Tracks the current index in the cpuTimes array
+    int currentIoIndex;  // Tracks the current index in the ioTimes array
 } Process;
 
 // Function declarations

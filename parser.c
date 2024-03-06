@@ -18,8 +18,8 @@ void parseInput(List* processList) {
         if (times != NULL && count > 1) { // Ensure there's at least arrival time and one CPU time
             int arrivalTime = times[0];
             // Dynamically allocate arrays based on actual count
-            int* cpuTimes = malloc(sizeof(int) * (count / 2));
-            int* ioTimes = malloc(sizeof(int) * (count / 2 - 1)); // One less because first is arrival time
+            int* cpuTimes = malloc(sizeof(int) * (count));
+            int* ioTimes = malloc(sizeof(int) * (count)); // One less because first is arrival time
             int cpuIndex = 0, ioIndex = 0;
             int totalBurstTime = 0;
             for (int i = 1; i < count; i++) { // Process times

@@ -3,28 +3,29 @@
 
 #include "process.h"
 
-// Define a node in the list
+// Node in the process list
 typedef struct Node {
-    Process *process;
-    struct Node *next;
+    Process* process; // Pointer to the process
+    struct Node* next; // Pointer to the next node
 } Node;
 
-// Define the list structure
+// List (queue) structure
 typedef struct List {
-    Node *head;  // Pointer to the front of the list
-    int size;    // Number of elements in the list
+    Node* head; // Pointer to the head of the list
+    Node* tail; // Pointer to the tail of the list for O(1) enqueue operation
+    int size; // Number of elements in the list
 } List;
 
-// Function declarations
-List* createList();
-void insertProcess(List *list, Process *process);
-Process* removeProcess(List *list, Process *process);
-Process* getFirstProcess(const List *list);
-int isListEmpty(const List *list);
-void freeList(List *list);
-
-// Debug function declarations
-void printList(const List *list);
-void printProcess(const Process *process);
+// Function prototypes
+List* createList(void); // Create a new empty list
+void insertProcess(List *list, Process *process); // Insert a process at the end (enqueue)
+Process* removeProcess(List *list, Process *process); // Remove a specific process from the list
+Process* dequeueProcess(List *list); // Remove and return the first process in the list (dequeue)
+Process* peekFirstProcess(const List *list); // Get the first process without removing it
+int isListEmpty(const List *list); // Check if the list is empty
+void freeList(List *list); // Free the list and its elements
+void insertProcessAtHead(List* list, Process* process); 
+void printProcess(const Process *process); // Debug function to print process details
+void printList(const List *list); // Debug function to print the list
 
 #endif // LIST_H
