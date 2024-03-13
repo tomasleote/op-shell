@@ -327,13 +327,20 @@ bool parseInputLineInternal(List* lp, Command** head) {
     }
 
     if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
+
+
         return parseInputLineInternal(lp, head);
     } else if (acceptToken(lp, "||")) {
+
+
+
         return parseInputLineInternal(lp, head);
     } else if (acceptToken(lp, ";")) {
+
+      
         return parseInputLineInternal(lp, head);
     }
-
+  return false; 
 }
 
 /**
@@ -353,7 +360,7 @@ Command *parseInputLine(List *lp, int *parsedSuccessfully) {
   Command* head = NULL;
 
   // Call the internal parsing function with the head pointer
-  bool result = parseInputLineInternal(lp, &head);
+  parseInputLineInternal(lp, &head);
   *parsedSuccessfully = 1;
   return (head);
 }

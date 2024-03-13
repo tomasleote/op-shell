@@ -18,7 +18,6 @@ int main(int argc, char *argv[],  char **envp) {
     char *inputLine;
     List tokenList;
     Command *newTokenList;
-    int status;
     int parsedSuccessfully = 0;
 
     while (true) {
@@ -32,7 +31,9 @@ int main(int argc, char *argv[],  char **envp) {
         tokenList = getTokenList(inputLine);
 
         newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
-       
+
+        printCommandList(newTokenList);
+
         if (tokenList == NULL && parsedSuccessfully) {
             //printCommands(newTokenList);
             execute(newTokenList, envp);

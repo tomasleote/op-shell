@@ -67,7 +67,7 @@ char *matchIdentifier(char *s, int *start)
 
   bool quoteStarted = false;
   size_t lenS = strlen(s);
-  while ((*start + offset <= lenS && !isspace(s[*start + offset]) && !isOperatorCharacter(s[*start + offset])) || quoteStarted)
+  while ((*start + offset <= lenS && !isspace((unsigned char)s[*start + offset]) && !isOperatorCharacter(s[*start + offset])) || quoteStarted)
   { // Ensure that whitespace in strings is accepted
     if (s[*start + offset] == '\"')
     { // Strip the quotes from the input before storing in the identifier
@@ -157,7 +157,7 @@ List getTokenList(char *s)
   int length = strlen(s);
   while (i < length)
   {
-    if (isspace(s[i]))
+    if (isspace((unsigned char)s[i]))
     { // spaces are skipped
       i++;
     }

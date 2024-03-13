@@ -3,6 +3,13 @@
 #include <stdlib.h>
 #include <string.h>
 
+char* strdup(const char* s) {
+    size_t len = strlen(s) + 1; // +1 for the null terminator
+    char* newStr = malloc(len);
+    if (newStr == NULL) return NULL; // Check malloc success
+    return memcpy(newStr, s, len);
+}
+
 // Function to create a new command
 Command* createCommand(char* commandName) {
     Command* newCommand = (Command*)malloc(sizeof(Command));
@@ -11,15 +18,17 @@ Command* createCommand(char* commandName) {
         exit(EXIT_FAILURE);
     }
 
-    newCommand->command = strdup(commandName);
+    newCommand->command = commandName;
     newCommand->commandPath = NULL; // Initially NULL, can be set later
     newCommand->next = NULL;
     newCommand->previous = NULL;
     newCommand->type = CMD_EXTERNAL; // Default to external command; 
-    memset(newCommand->redirections, 0, sizeof(newCommand->redirections));
-    memset(newCommand->pipes, 0, sizeof(newCommand->pipes));
     newCommand->options = NULL;
     newCommand->optionCount = 0;
+    newCommand->redirections[0] = -1;
+    newCommand->redirections[1] = -1;
+    newCommand->pipes[0] = -1;
+    newCommand->pipes[1] = -1;
 
     return newCommand;
 }
@@ -81,24 +90,38 @@ void deleteCommand(Command** head, Command* command) {
     freeCommand(command);
 }
 
-// Example function to print a single command (for debugging purposes)
-void printCommand(Command* command) {
-    printf("Command: %s\n", command->command);
-    printf("Type: %d\n", command->type);  
-
-    if (command->commandPath != NULL) {
-        printf("Command Path: %s\n", command->commandPath);
-    }
-
-    for (int i = 0; i < command->optionCount; i++) {
-        printf("Option %d: %s\n", i + 1, command->options[i]);
+void printCommandList(const Command* head) {
+    printf("Command List:\n");
+    while (head != NULL) {
+        printf("Command: %s\n", head->command);
+        if (head->commandPath != NULL) {
+            printf(" - Command Path: %s\n", head->commandPath);
+        }
+        printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
+        printf(" - Options:");
+        if (head->optionCount > 0) {
+            for (int i = 0; i < head->optionCount; i++) {
+                printf(" %s", head->options[i]);
+            }
+            printf("\n");
+        } else {
+            printf(" None\n");
+        }
+        if (head->redirections[0] != -1) {
+            printf(" - Input Redirection: %d\n", head->redirections[0]);
+        }
+        if (head->redirections[1] != -1) {
+            printf(" - Output Redirection: %d\n", head->redirections[1]);
+        }
+        if (head->pipes[0] != -1) {
+            printf(" - Pipe In: %d\n", head->pipes[0]);
+        }
+        if (head->pipes[1] != -1) {
+            printf(" - Pipe Out: %d\n", head->pipes[1]);
+        }
+        printf("\n");
+        head = head->next;
     }
 }
 
-// Example function to print the command list (for debugging purposes)
-void printCommands(Command* command) {
-    while (command != NULL) {
-        printCommand(command);
-        command = command->next;
-    }
-}
+

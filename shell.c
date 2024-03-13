@@ -82,7 +82,7 @@ void executeCommand(Command* current, char **envp) {
     addCommandToOptions(current);
     if (execvp(current->command, current->options) == -1) {
       perror("Error: command not found!");
-      exit(EXIT_FAILURE);
+      exit(EXIT_FAILURE); //errno
       //clean data here
     }
   } else if (pid > 0) {
