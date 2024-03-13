@@ -1,9 +1,10 @@
-all: shell
+CC=gcc
+CFLAGS=-Wall -g
+SOURCES=main.c shell.c command.c scanner.c parser.c builtIns.c
+EXECUTABLE=shell
 
-shell:
-	gcc -std=c99 -Wall -pedantic main.c scanner.c shell.c command.c -o shell
+all:
+	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
 
 clean:
-	rm -f *~
-	rm -f *.o
-	rm -f shell
+	rm -f $(EXECUTABLE)

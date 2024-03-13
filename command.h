@@ -9,7 +9,6 @@ typedef enum {
 // Command structure
 typedef struct Command {
     char* command;         // Command name
-    char* commandPath;     // Filesystem path to the executable, if external
     struct Command* next;  // Pointer to the next command in the list
     struct Command* previous; // Pointer to the previous command in the list
     CommandType type;      // Type of command (external or built-in)
@@ -24,6 +23,7 @@ typedef struct Command {
 Command* createCommand(char* commandName);
 void addOptionToCommand(Command* command, char* option);
 void freeCommand(Command* command);
+void freeCommandList(Command* head);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
 void printCommandList(const Command* head); 

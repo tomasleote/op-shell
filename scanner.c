@@ -211,13 +211,13 @@ void printList(List li)
  * in the nodes.
  * @param li the starting node of a list.
  */
-void freeTokenList(List li)
-{
-  if (li == NULL)
-  {
+void freeTokenList(List li) {
+  if (li == NULL) {
     return;
   }
-  free(li->t);
-  freeTokenList(li->next);
-  free(li);
+  free(li->t); // Frees the token string
+  List next = li->next; // Save the next node before freeing the current node
+  free(li); // Frees the current node
+  freeTokenList(next); // Recurse into the next node
 }
+

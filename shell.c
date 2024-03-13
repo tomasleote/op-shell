@@ -7,27 +7,7 @@
 #include "command.h"
 #include "shell.h"
 #include <sys/wait.h>
-
-int lastExitStatus = 0; 
-
-/**
- * Exits the shell
- * @param args List of arguments.
-*/
-int exitShell(char **args) {
-  printf("Exiting shell!\n");
-  exit(0);
-}
-
-/**
- * Prints the most recent exit status.
- * @param args List of arguments.
-*/
-int statusShell(char **args) {
-    printf("The most recent exit code is: %d\n", lastExitStatus);
-    return 1; // Indicate success, shell continues running
-}
-
+#include "builtIns.h"
 
 /**
  * Executes the linked list.
@@ -35,8 +15,9 @@ int statusShell(char **args) {
  * @param envp The environment variables.
 */
 void execute(Command* head, char **envp) {
-  // lastExitStatus = 0;
   Command* current = head;
+  Command* next = NULL;
+  
   while (current) {
       if (current->type == CMD_BUILTIN) {
         //printf("Executing built-in %s\n", current->command);
@@ -45,23 +26,10 @@ void execute(Command* head, char **envp) {
         //printf("Executing command %s\n", current->command);
         executeCommand(current, envp);
       }
-    current = current->next;
-    }
-}
 
-/**
- * Executes built-in commands.
- * @param args List of arguments.
-*/
-void executeBuiltIns(Command* current) {
-  
-  if (strcmp(current->command, "exit") == 0) {
-        exitShell(current->options);
-  } else if (strcmp(current->command, "status") == 0) {
-        statusShell(current->options);
-  } else {
-        printf("Unknown command: %s\n", current->command);
-  }
+    next = current->next;
+    current = next;
+    }
 }
 
 /**
@@ -82,16 +50,14 @@ void executeCommand(Command* current, char **envp) {
     addCommandToOptions(current);
     if (execvp(current->command, current->options) == -1) {
       perror("Error: command not found!");
+      //freeCommandList(current);
       exit(EXIT_FAILURE); //errno
       //clean data here
     }
   } else if (pid > 0) {
     int status;
     waitpid(pid, &status, 0); // Wait for the command to complete
-    
-    // if (WIFEXITED(status)) {
-        lastExitStatus = WEXITSTATUS(status); // Update global status
-    // }
+    updateLastExitStatus(WEXITSTATUS(status));
   }
       
 }

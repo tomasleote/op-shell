@@ -18,8 +18,14 @@ Command* createCommand(char* commandName) {
         exit(EXIT_FAILURE);
     }
 
-    newCommand->command = commandName;
-    newCommand->commandPath = NULL; // Initially NULL, can be set later
+    newCommand->command = strdup(commandName);
+    
+    if (newCommand->command == NULL) {
+        perror("strdup failed");
+        free(newCommand); // Make sure to free allocated command before returning NULL
+        return NULL;
+    }
+
     newCommand->next = NULL;
     newCommand->previous = NULL;
     newCommand->type = CMD_EXTERNAL; // Default to external command; 
@@ -48,12 +54,20 @@ void addOptionToCommand(Command* command, char* option) {
 void freeCommand(Command* command) {
     if (command != NULL) {
         free(command->command);
-        free(command->commandPath);
         for (int i = 0; i < command->optionCount; i++) {
             free(command->options[i]);
         }
         free(command->options);
         free(command);
+    }
+}
+
+// Function to free a list of commands
+void freeCommandList(Command* head) {
+    while (head != NULL) {
+        Command* next = head->next;
+        freeCommand(head); // Use existing freeCommand to free individual commands
+        head = next;
     }
 }
 
@@ -94,9 +108,6 @@ void printCommandList(const Command* head) {
     printf("Command List:\n");
     while (head != NULL) {
         printf("Command: %s\n", head->command);
-        if (head->commandPath != NULL) {
-            printf(" - Command Path: %s\n", head->commandPath);
-        }
         printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
         printf(" - Options:");
         if (head->optionCount > 0) {

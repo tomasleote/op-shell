@@ -39,53 +39,10 @@ bool isValidSyntax(List lp) {
         return false;
     }
 
-    printf("Syntax is valid!\n");
+    //printf("Syntax is valid!\n");
     return true;
 }
 
-
-
-/**
- * Joins two strings together.
- * @param s1 first string.
- * @param s2 second string.
-*/
-char *str_joiner(const char *s1, const char *s2) {
-    if (!s1 || !s2) return NULL;
-    char *result = malloc(strlen(s1) + strlen(s2) + 1);
-    if (result) {
-        strcpy(result, s1);
-        strcat(result, s2);
-    }
-    return result;
-}
-
-/**
- * Gets the path of a command.
- * @param cmd command.
- * @param path path.
-*/
-char *get_cmd_path(char *cmd, char *path) {
-    if (!cmd || !path) return NULL;
-    char *res = NULL;
-    char *path_dup = strdup(path);
-    char *token = strtok(path_dup, ":");
-
-    while (token != NULL) {
-        res = str_joiner(token, "/");
-        char *full_path = str_joiner(res, cmd);
-        free(res);
-
-        if (access(full_path, F_OK | X_OK) == 0) {
-            free(path_dup);
-            return full_path;
-        }
-        free(full_path);
-        token = strtok(NULL, ":");
-    }
-    free(path_dup);
-    return NULL;
-}
 
 /**
  * Checks whether the input string \param s is an operator.
@@ -150,15 +107,18 @@ bool parseCommand(List *lp, Command** head) {
 bool parseExecutable(List *lp, Command **head) {
 
   if (!isValidSyntax(*lp)) {
-        printf("! Error: invalid syntax!\n");
-        return false;
-    }
-  
+    perror("Invalid syntax!\n");
+    return false;
+  }
+
   char* executableName = (*lp)->t;
   Command* newCmd = createCommand(executableName);
-  char *path = getenv("PATH");
-  newCmd->commandPath = get_cmd_path(newCmd->command, path);
 
+  if (newCmd == NULL) {
+    freeCommand(newCmd);
+    return false;
+  }
+  
   if (*head == NULL) {
     *head = newCmd;
   } else {
@@ -244,12 +204,11 @@ bool parseBuiltIn(List *lp, Command** head) {
   char *builtIns[] = {
       "exit",
       "status",
+      "cd",
       NULL};
 
-  for (int i = 0; builtIns[i] != NULL; i++)
-  {
-    if (acceptToken(lp, builtIns[i])) 
-    {
+  for (int i = 0; builtIns[i] != NULL; i++) {
+    if (acceptToken(lp, builtIns[i])) {
       Command* newCmd = createCommand(builtIns[i]);
       newCmd->type = CMD_BUILTIN; // Set as built-in command
 

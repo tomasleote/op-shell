@@ -32,17 +32,18 @@ int main(int argc, char *argv[],  char **envp) {
 
         newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
 
-        printCommandList(newTokenList);
+        //printCommandList(newTokenList);
 
         if (tokenList == NULL && parsedSuccessfully) {
             //printCommands(newTokenList);
             execute(newTokenList, envp);
         } else {
-            printf("Error: invalid syntax!\n");
+            printf("invalid syntax!\n");
         }
 
         free(inputLine);
         freeTokenList(tokenList);
+        freeCommandList(newTokenList);
     }
     
     return 0;

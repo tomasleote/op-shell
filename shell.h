@@ -5,9 +5,7 @@
 
 
 // Function prototypes
-int exitShell(char **args);
 void execute(Command* head, char **envp);
-void executeBuiltIns(Command* current);
 void executeCommand(Command* current, char **envp);
 void addCommandToOptions (Command* current);
 
