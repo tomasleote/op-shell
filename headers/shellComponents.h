@@ -6,8 +6,16 @@
 // From command.c
 typedef enum {
     CMD_EXTERNAL,
-    CMD_BUILTIN
+    CMD_BUILTIN,
+    CMD_EXECUTABLE
 } CommandType;
+
+typedef enum {
+    OP_NONE, // No operator, or end of a command sequence
+    OP_AND,  // &&
+    OP_OR,   // ||
+    OP_SEQ   // ;
+} OperatorType;
 
 typedef struct Command {
     char* command;
@@ -18,6 +26,7 @@ typedef struct Command {
     int pipes[2];
     char** options;
     int optionCount;
+    OperatorType nextOp;
 } Command;
 
 // Function prototypes from command.c
@@ -29,6 +38,7 @@ void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
 void printCommandList(const Command* head); 
 char* strdup(const char* s);
+void changeOperator(Command* command, OperatorType newOp);
 
 // From builtIns.c
 typedef enum {
@@ -42,7 +52,6 @@ typedef enum {
 void exitShell(char **args);
 void statusShell(char **args);
 void executeBuiltIns(Command* current);
-void updateLastExitStatus (int status);
 int cdShell(Command* current);
 BuiltInCommand getBuiltInCommand(const char *command);
 
@@ -50,5 +59,6 @@ BuiltInCommand getBuiltInCommand(const char *command);
 void execute(Command* head, char **envp);
 void executeCommand(Command* current, char **envp);
 void addCommandToOptions(Command* current);
+void updateLastExitStatus (int status);
 
 #endif

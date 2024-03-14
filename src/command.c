@@ -1,3 +1,4 @@
+#include <stdbool.h>
 #include "shellComponents.h"
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,13 +29,14 @@ Command* createCommand(char* commandName) {
 
     newCommand->next = NULL;
     newCommand->previous = NULL;
-    newCommand->type = CMD_EXTERNAL; // Default to external command; 
+    newCommand->type = CMD_EXTERNAL; 
     newCommand->options = NULL;
     newCommand->optionCount = 0;
     newCommand->redirections[0] = -1;
     newCommand->redirections[1] = -1;
     newCommand->pipes[0] = -1;
     newCommand->pipes[1] = -1;
+    newCommand->nextOp = OP_NONE;
 
     return newCommand;
 }
@@ -85,6 +87,14 @@ void appendCommand(Command** head, Command* newCommand) {
     }
 }
 
+void changeOperator(Command* command, OperatorType newOp) {
+    if (command != NULL) {
+        command->nextOp = newOp;
+    } else {
+        fprintf(stderr, "Error: Attempted to change operator of NULL command\n");
+    }
+}
+
 // Function to delete a command from the list
 void deleteCommand(Command** head, Command* command) {
     if (*head == NULL || command == NULL) return;
@@ -109,6 +119,7 @@ void printCommandList(const Command* head) {
     while (head != NULL) {
         printf("Command: %s\n", head->command);
         printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
+        printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : head->nextOp == OP_OR ? "||" : ";");
         printf(" - Options:");
         if (head->optionCount > 0) {
             for (int i = 0; i < head->optionCount; i++) {

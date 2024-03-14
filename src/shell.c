@@ -7,6 +7,12 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+int lastExitStatus = 0;
+
+void updateLastExitStatus (int status) {
+  lastExitStatus = status;
+}
+
 /**
  * Executes the linked list.
  * @param head pointer to current element to execute.
@@ -14,20 +20,42 @@
 */
 void execute(Command* head, char **envp) {
   Command* current = head;
-  Command* next = NULL;
   
   while (current) {
-      if (current->type == CMD_BUILTIN) {
-        //printf("Executing built-in %s\n", current->command);
-        executeBuiltIns(current);
-      } else {
-        //printf("Executing command %s\n", current->command);
-        executeCommand(current, envp);
-      }
 
-    next = current->next;
-    current = next;
+    //printCommandList(current);
+
+    bool shouldExecuteNext = true; 
+
+    if (current->type == CMD_BUILTIN) {
+      //printf("Executing built-in %s\n", current->command);
+      executeBuiltIns(current);
+    } else {
+      //printf("Executing command %s\n", current->command);
+      executeCommand(current, envp);
     }
+
+    switch (current->nextOp) {
+      case OP_AND: // &&
+        shouldExecuteNext = (lastExitStatus == 0);
+        break;
+      case OP_OR: // ||
+        shouldExecuteNext = (lastExitStatus != 0);
+        break;
+      case OP_SEQ: // ; and \n (handled the same way)
+      case OP_NONE: // No operator, or end of a command sequence
+        shouldExecuteNext = true; // Always execute the next command
+        break;
+    }
+
+    if (!shouldExecuteNext) {
+      if (current->next != NULL) {
+        current = current->next; // Skip next command
+      } 
+    }
+
+    current = current != NULL ? current->next : NULL;
+  }
 }
 
 /**

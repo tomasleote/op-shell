@@ -33,7 +33,6 @@ int main(int argc, char *argv[],  char **envp) {
         //printCommandList(newTokenList);
 
         if (tokenList == NULL && parsedSuccessfully) {
-            //printCommands(newTokenList);
             execute(newTokenList, envp);
         } else {
             printf("invalid syntax!\n");

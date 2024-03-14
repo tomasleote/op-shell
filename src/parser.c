@@ -8,6 +8,8 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+Command* currentCommandBeingParsed = NULL;
+
 //TODO: Finish implementing this, not working yet
 bool isValidSyntax(List lp) {
     bool openQuote = false;
@@ -112,6 +114,8 @@ bool parseExecutable(List *lp, Command **head) {
 
   char* executableName = (*lp)->t;
   Command* newCmd = createCommand(executableName);
+  newCmd->type = CMD_EXECUTABLE;
+  currentCommandBeingParsed = newCmd;
 
   if (newCmd == NULL) {
     freeCommand(newCmd);
@@ -210,6 +214,7 @@ bool parseBuiltIn(List *lp, Command** head) {
     if (acceptToken(lp, builtIns[i])) {
       Command* newCmd = createCommand(builtIns[i]);
       newCmd->type = CMD_BUILTIN; // Set as built-in command
+      currentCommandBeingParsed = newCmd;
 
       if (*head == NULL) {
         *head = newCmd;
@@ -277,24 +282,22 @@ bool parseFileName(List *lp) {
 
 bool parseInputLineInternal(List* lp, Command** head) {
     if (isEmpty(*lp)) {
-        return true;
+      return true;
     }
 
     if (!parseChain(lp, head)) {
-        return false;
+      printf("Error: invalid syntax!\n");
+      return false;
     }
 
     if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
-      
-        return parseInputLineInternal(lp, head);
+      changeOperator(currentCommandBeingParsed, OP_AND);
+      return parseInputLineInternal(lp, head);
     } else if (acceptToken(lp, "||")) {
-
-
-
+        changeOperator(currentCommandBeingParsed, OP_OR);
         return parseInputLineInternal(lp, head);
     } else if (acceptToken(lp, ";")) {
-
-      
+        changeOperator(currentCommandBeingParsed, OP_SEQ);
         return parseInputLineInternal(lp, head);
     }
   return false; 
