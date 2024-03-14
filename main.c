@@ -2,10 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h> 
-#include "command.h"
-#include "scanner.h"
-#include "shell.h"
-#include "parser.h"
+#include "shellComponents.h"
+#include "parsingTools.h"
 
 /**
  * Main function of the shell.

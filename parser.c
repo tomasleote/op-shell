@@ -1,13 +1,12 @@
-#include "parser.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include "scanner.h"
-#include "command.h"
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
+#include "shellComponents.h"
+#include "parsingTools.h"
 
 //TODO: Finish implementing this, not working yet
 bool isValidSyntax(List lp) {

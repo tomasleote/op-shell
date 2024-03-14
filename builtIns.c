@@ -1,4 +1,4 @@
-#include "builtIns.h"
+#include "shellComponents.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,8 +62,8 @@ int cdShell(Command* current) {
         targetDir = current->options[0];
     }
 
-    // Handling 'cd' with no arguments or 'cd ~' to go to the home directory
-    if (targetDir == NULL || strcmp(targetDir, "~") == 0) {
+    // Handling 'cd ~' to go to the home directory
+    if (strcmp(targetDir, "~") == 0) {
         targetDir = getenv("HOME");
         if (targetDir == NULL) {
             fprintf(stderr, "Error cd: HOME not set\n");

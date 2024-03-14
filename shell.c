@@ -1,13 +1,11 @@
 #include <stdbool.h>
 #include <string.h>
-#include "scanner.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include "command.h"
-#include "shell.h"
 #include <sys/wait.h>
-#include "builtIns.h"
+#include "shellComponents.h"
+#include "parsingTools.h"
 
 /**
  * Executes the linked list.
