@@ -88,6 +88,11 @@ void executeCommand(Command* current, char **envp) {
       
 }
 
+/**
+ * Adds a command to the options array.
+ * @param current The command to add.
+ * @return void
+*/
 void addCommandToOptions (Command* current) {
   // Create an array for execvp arguments
   char **args = malloc((current->optionCount + 2) * sizeof(char*)); // +2 for command and NULL terminator

@@ -5,6 +5,10 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+char *inputLine;
+List tokenList;
+Command *newTokenList;
+
 /**
  * Main function of the shell.
  * @param argc Number of arguments.
@@ -13,9 +17,7 @@
  * @return 0 if successful.
  */
 int main(int argc, char *argv[],  char **envp) {
-    char *inputLine;
-    List tokenList;
-    Command *newTokenList;
+    
     int parsedSuccessfully = 0;
 
     while (true) {
@@ -37,11 +39,16 @@ int main(int argc, char *argv[],  char **envp) {
         } else {
             printf("invalid syntax!\n");
         }
-
-        free(inputLine);
-        freeTokenList(tokenList);
-        freeCommandList(newTokenList);
+        
+        freeMemory(); 
     }
     
     return 0;
+}
+
+void freeMemory() {
+    
+    free(inputLine);
+    freeTokenList(tokenList);
+    freeCommandList(newTokenList);
 }

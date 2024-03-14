@@ -34,11 +34,22 @@ typedef struct ListNode {
 } ListNode;
 
 // Function prototypes from scanner.c
-char *readInputLine();
+char *readInputLine(); 
+List newNode(char *s, int *start); 
+List newOperatorNode(char *s, int *start); 
+char *matchIdentifier(char *s, int *start) ;
+
+
+//Function prototypes from tokenList.c
 List getTokenList(char *s);
 bool isEmpty(List l);
 void printList(List l);
 void freeTokenList(List l);
+
+//Function prototypes from operators.c
+bool isOperatorCharacter(char c);
+char *matchOperator(char *s, int *start);
+
 
 // Function prototypes from parser.c
 Command* parseInputLine(List *lp, int *parsedSuccessfully);

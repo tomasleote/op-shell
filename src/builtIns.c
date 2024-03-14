@@ -17,6 +17,7 @@ BuiltInCommand getBuiltInCommand(const char *command) {
 }
 
 void exitShell(char **args) {
+    freeMemory(); 
     exit(0);
 }
 

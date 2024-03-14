@@ -29,6 +29,9 @@ typedef struct Command {
     OperatorType nextOp;
 } Command;
 
+//Function prototypes from main.c
+void freeMemory();
+
 // Function prototypes from command.c
 Command* createCommand(char* commandName);
 void addOptionToCommand(Command* command, char* option);
