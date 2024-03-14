@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include "headers/shellComponents.h"
-#include "headers/parsingTools.h"
+#include "shellComponents.h"
+#include "parsingTools.h"
 
 //TODO: Finish implementing this, not working yet
 bool isValidSyntax(List lp) {
@@ -106,7 +106,7 @@ bool parseCommand(List *lp, Command** head) {
 bool parseExecutable(List *lp, Command **head) {
 
   if (!isValidSyntax(*lp)) {
-    perror("Invalid syntax!\n");
+    printf("Error: invalid syntax!\n");
     return false;
   }
 
@@ -285,8 +285,7 @@ bool parseInputLineInternal(List* lp, Command** head) {
     }
 
     if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
-
-
+      
         return parseInputLineInternal(lp, head);
     } else if (acceptToken(lp, "||")) {
 
