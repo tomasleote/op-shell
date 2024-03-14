@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <assert.h>
 #include <stdbool.h>
-#include "parsingTools.h"
+#include "headers/parsingTools.h"
 
 /**
  * Reads an inputline from stdin.

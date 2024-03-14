@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <unistd.h> 
-#include "shellComponents.h"
-#include "parsingTools.h"
+#include "headers/shellComponents.h"
+#include "headers/parsingTools.h"
 
 /**
  * Main function of the shell.

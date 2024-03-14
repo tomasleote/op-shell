@@ -5,8 +5,8 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include "shellComponents.h"
-#include "parsingTools.h"
+#include "headers/shellComponents.h"
+#include "headers/parsingTools.h"
 
 //TODO: Finish implementing this, not working yet
 bool isValidSyntax(List lp) {

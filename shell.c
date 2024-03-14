@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <sys/wait.h>
-#include "shellComponents.h"
-#include "parsingTools.h"
+#include "headers/shellComponents.h"
+#include "headers/parsingTools.h"
 
 /**
  * Executes the linked list.
