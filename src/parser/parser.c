@@ -108,14 +108,13 @@ bool parseCommand(List *lp, Command** head) {
  * @return a bool denoting whether the executable was parsed successfully.
  */
 bool parseExecutable(List *lp, Command **head) {
-  List *tmp = lp;
 
-  if (!isValidSyntax(tmp)) {
+  if (!isValidSyntax(lp)) {
     printf("Error: invalid syntax!\n");
     return false;
   }
 
-  char* executableName = tmp->t;
+  char* executableName = lp->t;
   Command* newCmd = createCommand(executableName);
   newCmd->type = CMD_EXECUTABLE;
   currentCommandBeingParsed = newCmd;
@@ -130,7 +129,7 @@ bool parseExecutable(List *lp, Command **head) {
   else
     appendCommand(head, newCmd);
 
-  tmp = tmp->next;  
+  lp = lp->next;  
   return true;
 }
 
@@ -153,8 +152,13 @@ bool parseOptions(List *lp, Command** head) {
   // TODO: Allocate memory for the array of strings DO NOT FORGET TO FREE LATER
   //cu->options = (char **)malloc(sizeof(char *) * command->optionCount);
   while (tmp != NULL && !isOperator(tmp->t)) {
-    addOptionToCommand(currentCmd, tmp->t);
-    tmp = tmp->next;
+    
+    if (strcmp(tmp->t, currentCmd->command) == 0) {
+      tmp = tmp->next;
+    } else {
+      addOptionToCommand(currentCmd, tmp->t);
+      tmp = tmp->next;
+    }
   }
 
   return true;
