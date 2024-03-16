@@ -1,11 +1,40 @@
-CC=gcc
-CFLAGS=-Wall -g -I./headers
-SOURCES=src/main.c src/shell.c src/parser/command.c src/parser/scanner.c src/parser/parser.c src/builtIns.c src/parser/operators.c src/parser/tokenList.c
-EXECUTABLE=shell
+NAME = shell
+CC = gcc
+CFLAGS = -Wall -Wall -Werror -g
+SRC_DIR = src
+OBJ_DIR = build
+INC_DIR = headers #inc
+INC_FLAGS = -I $(INC_DIR)
+SRC_FILES =	main.c \
+			shell.c \
+			parser/command.c \
+			parser/scanner.c \
+			parser/parser.c \
+			builtIns.c \
+			parser/operators.c \
+			parser/tokenList.c
 
-all:
-	$(CC) $(CFLAGS) $(SOURCES) -o $(EXECUTABLE)
+SRCS = $(addprefix $(SRC_DIR)/, $(SRC_FILES))
+OBJS = $(addprefix $(OBJ_DIR)/, $(SRC_FILES:.c=.o))
+
+$(NAME) : $(OBJS)
+	@echo "Compiling $@"
+	@$(CC) $(CFLAGS) -o $@ $^ $(INC_FLAGS)
+	@echo "Done!"
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(@D)
+	@echo "Compiling $<"
+	@$(CC) $(CFLAGS) $(INC_FLAGS) -c $< -o $@
+
+all: $(NAME)
 
 clean:
-	rm -f $(EXECUTABLE)
+	@rm -f $(NAME)
 
+fclean: clean
+	@rm -f $(NAME)
+
+re: clean all
+
+.PHONY: all clean fclean re

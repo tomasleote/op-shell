@@ -24,7 +24,7 @@ typedef struct Command {
     CommandType type;
     int redirections[2];
     int pipes[2];
-    char** options;
+    char **options;
     int optionCount;
     OperatorType nextOp;
 } Command;

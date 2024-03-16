@@ -11,12 +11,13 @@
 Command* currentCommandBeingParsed = NULL;
 
 //TODO: Finish implementing this, not working yet
-bool isValidSyntax(List lp) {
+bool isValidSyntax(List *lp) {
     bool openQuote = false;
     char quoteChar = '\0';
+    List *tmp = lp;
 
-    while (lp != NULL) {
-        char *token = lp->t; // Correctly dereferencing to get the token
+    while (tmp) {
+        char *token = tmp->t; // Correctly dereferencing to get the token
         // Check for the presence of quotes in the token
         for (int i = 0; token[i] != '\0'; i++) {
             if (token[i] == '"' || token[i] == '\'') {
@@ -30,8 +31,7 @@ bool isValidSyntax(List lp) {
                 }
             }
         }
-
-        lp = lp->next; // Move to the next token in the list
+        tmp = tmp->next; // Move to the next token in the list
     }
 
     // If we've reached the end and a quote is still open, syntax is invalid
@@ -79,8 +79,10 @@ bool isOperator(char *s) {
  * @return a bool denoting whether the current token matches the target identifier.
  */
 bool acceptToken(List *lp, char *ident) {
-  if (*lp != NULL && strcmp(((*lp)->t), ident) == 0) {
-    *lp = (*lp)->next;
+  if (!lp)
+    return false;
+  if (strcmp(lp->t, ident) == 0) {
+    lp = lp->next;
     return true;
   }
 
@@ -106,13 +108,14 @@ bool parseCommand(List *lp, Command** head) {
  * @return a bool denoting whether the executable was parsed successfully.
  */
 bool parseExecutable(List *lp, Command **head) {
+  List *tmp = lp;
 
-  if (!isValidSyntax(*lp)) {
+  if (!isValidSyntax(tmp)) {
     printf("Error: invalid syntax!\n");
     return false;
   }
 
-  char* executableName = (*lp)->t;
+  char* executableName = tmp->t;
   Command* newCmd = createCommand(executableName);
   newCmd->type = CMD_EXECUTABLE;
   currentCommandBeingParsed = newCmd;
@@ -122,14 +125,12 @@ bool parseExecutable(List *lp, Command **head) {
     return false;
   }
   
-  if (*head == NULL) {
+  if (*head == NULL)
     *head = newCmd;
-  } else {
+  else
     appendCommand(head, newCmd);
-  }
 
-  (*lp) = (*lp)->next;  
-
+  tmp = tmp->next;  
   return true;
 }
 
@@ -139,18 +140,21 @@ bool parseExecutable(List *lp, Command **head) {
  * @return a bool denoting whether the options were parsed successfully.
  */
 bool parseOptions(List *lp, Command** head) {
+  List *tmp = lp;
+  
   if (*head == NULL) return false;
-
   Command* currentCmd = *head;
 
   while (currentCmd->next != NULL) {
     currentCmd = currentCmd->next;
   }
 
-  // TODO: store each (*lp)->t as an option, if any exist
-  while (*lp != NULL && !isOperator((*lp)->t)) {
-    addOptionToCommand(currentCmd, (*lp)->t);
-    (*lp) = (*lp)->next;
+  // TODO: store each tmp->t as an option, if any exist
+  // TODO: Allocate memory for the array of strings DO NOT FORGET TO FREE LATER
+  //cu->options = (char **)malloc(sizeof(char *) * command->optionCount);
+  while (tmp != NULL && !isOperator(tmp->t)) {
+    addOptionToCommand(currentCmd, tmp->t);
+    tmp = tmp->next;
   }
 
   return true;
@@ -239,7 +243,7 @@ bool parseBuiltIn(List *lp, Command** head) {
  * @return a bool denoting whether the redirections were parsed successfully.
  */
 bool parseRedirections(List *lp) {
-  if (isEmpty(*lp)) {
+  if (isEmpty(lp)) {
     return true;
   }
 
@@ -272,16 +276,18 @@ bool parseRedirections(List *lp) {
  * @return a bool denoting whether the filename was parsed successfully.
  */
 bool parseFileName(List *lp) {
-  char *fileName = (*lp)->t;
+  List *tmp = lp;
+
+  char *fileName = tmp->t;
   if (fileName == NULL) {
     return false;
   }
-  (*lp) = (*lp)->next;
+  tmp = tmp->next;
   return true;
 }
 
 bool parseInputLineInternal(List* lp, Command** head) {
-    if (isEmpty(*lp)) {
+    if (isEmpty(lp)) {
       return true;
     }
 

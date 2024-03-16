@@ -1,5 +1,6 @@
 #include <stdbool.h>
 #include "shellComponents.h"
+#include "parsingTools.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -15,18 +16,18 @@ char* strdup(const char* s) {
 Command* createCommand(char* commandName) {
     Command* newCommand = (Command*)malloc(sizeof(Command));
     if (newCommand == NULL) {
-        perror("Unable to allocate memory for new command");
-        exit(EXIT_FAILURE);
+        perror("malloc");
+        // Free memory
+       return NULL;
     }
 
     newCommand->command = strdup(commandName);
-    
     if (newCommand->command == NULL) {
-        perror("strdup failed");
+        perror("strdup");
+        // Free memory
         free(newCommand); // Make sure to free allocated command before returning NULL
         return NULL;
     }
-
     newCommand->next = NULL;
     newCommand->previous = NULL;
     newCommand->type = CMD_EXTERNAL; 
@@ -117,7 +118,7 @@ void deleteCommand(Command** head, Command* command) {
 void printCommandList(const Command* head) {
     printf("Command List:\n");
     while (head != NULL) {
-        printf("Command: %s\n", head->command);
+        printf("%sCommand: %s\n", GREEN, head->command);
         printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
         printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : head->nextOp == OP_OR ? "||" : ";");
         printf(" - Options:");
@@ -141,7 +142,7 @@ void printCommandList(const Command* head) {
         if (head->pipes[1] != -1) {
             printf(" - Pipe Out: %d\n", head->pipes[1]);
         }
-        printf("\n");
+        printf("%s\n", WHITE);
         head = head->next;
     }
 }

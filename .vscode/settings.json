@@ -1,6 +1,7 @@
 {
     "files.associations": {
         "scanner.h": "c",
-        "parsingtools.h": "c"
+        "parsingtools.h": "c",
+        "random": "c"
     }
 }

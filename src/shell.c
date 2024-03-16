@@ -76,9 +76,8 @@ void executeCommand(Command* current, char **envp) {
     addCommandToOptions(current);
     if (execvp(current->command, current->options) == -1) {
       printf("Error: command not found!\n");
-      //freeCommandList(current);
+      // Free all data!
       exit(127); //errno
-      //clean data here
     }
   } else if (pid > 0) {
     int status;

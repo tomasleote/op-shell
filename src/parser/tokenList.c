@@ -11,7 +11,7 @@
  * @param l input list.
  * @return a bool denoting whether \param l is empty.
  */
-bool isEmpty(List l) {
+bool isEmpty(List *l) {
   return l == NULL;
 }
 
@@ -19,38 +19,34 @@ bool isEmpty(List l) {
  * The function printList prints the tokens in a token list, separated by commas.
  * @param li the input list to be printed.
  */
-void printList(List li) {
+void printList(List *li) {
   if (li == NULL) return;
+	printf("%sToken list:\n", MAGENTA);
   printf("\"%s\"", li->t);
   li = li->next;
   while (li != NULL) {
     printf(", \"%s\"", li->t);
     li = li->next;
   }
-  printf("\n");
+  printf("%s\n", WHITE);
 }
 
 /**
  * The function freeNode frees the memory of the node and of the string in the node.
  * @param node the node to be freed.
 */
-void freeNode(List node) {
-  free(node->t);
-  free(node);
-}
 
 /**
  * The function freeTokenlist frees the memory of the nodes of the list, and of the strings
  * in the nodes.
  * @param li the starting node of a list.
  */
-void freeTokenList(List li) {
-  if (li == NULL) {
+void freeTokenList(List *li) {
+  if (!li)
     return;
-  }
-  List next = li->next; // Save the next node before freeing the current node
-  freeNode(li); // Free the current node
-  freeTokenList(next); // Recurse into the next node
+	free(li->t);
+  freeTokenList(li->next); // Recurse into the next node
+  free(li);
 }
 
 /**
@@ -58,30 +54,30 @@ void freeTokenList(List li) {
  * @param s input string.
  * @return a pointer to the beginning of the list.
  */
-List getTokenList(char *s) {
-  List lastNode = NULL;
-  List node = NULL;
-  List tl = NULL;
+List *getTokenList(char *s) {
+	List *head = NULL;
+  List *node = NULL;
+  List *tl = NULL;
   int i = 0;
   int length = strlen(s);
   while (i < length) {
-    if (isspace((unsigned char)s[i])) { 
-      // spaces are skipped
+    if (isspace((unsigned char)s[i]))
       i++;
-    }
     else {
       node = isOperatorCharacter(s[i]) ? newOperatorNode(s, &i) : newNode(s, &i);
-      if (lastNode == NULL) { 
-        // there is no list yet
-        tl = node;
-      }
-      else { 
-        // a list already exists; add current node at the end
-        (lastNode)->next = node;
-      }
-      lastNode = node;
+      if (!node)
+				break;
+			if (!head) {
+        tl = node;			//tl pointer to newly created node	
+				head = tl;			//saving the pointer of the head of the tl
+			}
+      else {
+				tl->next = node;
+				tl = tl->next;
+			}
     }
   }
+	tl = head;
   return tl;
 }
 
@@ -92,8 +88,9 @@ List getTokenList(char *s) {
  * @param start starting index in string \param s.
  * @return a list node that contains the current token.
  */
-List newNode(char *s, int *start) {
-  List node = malloc(sizeof(*node));
+List *newNode(char *s, int *start) {
+  List *node;
+	node = malloc(sizeof(List));
   assert(node != NULL);
   node->next = NULL;
   node->t = matchIdentifier(s, start);
@@ -107,8 +104,8 @@ List newNode(char *s, int *start) {
  * @param start starting index in string \param s.
  * @return a list node that contains the current token.
  */
-List newOperatorNode(char *s, int *start) {
-  List node = malloc(sizeof(*node));
+List *newOperatorNode(char *s, int *start) {
+  List *node = malloc(sizeof(*node));
   assert(node != NULL);
   node->next = NULL;
   node->t = matchOperator(s, start);

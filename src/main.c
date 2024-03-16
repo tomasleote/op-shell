@@ -6,7 +6,7 @@
 #include "parsingTools.h"
 
 char *inputLine;
-List tokenList;
+List *tokenList;
 Command *newTokenList;
 
 /**
@@ -29,12 +29,10 @@ int main(int argc, char *argv[],  char **envp) {
         }
 
         tokenList = getTokenList(inputLine);
+        newTokenList = parseInputLine(tokenList, &parsedSuccessfully);
 
-        newTokenList = parseInputLine(&tokenList, &parsedSuccessfully);
-
-        //printCommandList(newTokenList);
-
-        if (tokenList == NULL && parsedSuccessfully) {
+        printCommandList(newTokenList);
+        if (parsedSuccessfully) {
             execute(newTokenList, envp);
         } else {
             printf("invalid syntax!\n");
