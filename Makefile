@@ -30,11 +30,11 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
 all: $(NAME)
 
 clean:
-	@rm -f $(NAME)
+	@rm -rf $(OBJ_DIR)
 
 fclean: clean
-	@rm -f $(NAME)
+	@rm -rf $(NAME)
 
-re: clean all
+re: fclean all
 
 .PHONY: all clean fclean re
