@@ -31,6 +31,15 @@ void printList(List li) {
 }
 
 /**
+ * The function freeNode frees the memory of the node and of the string in the node.
+ * @param node the node to be freed.
+*/
+void freeNode(List node) {
+  free(node->t);
+  free(node);
+}
+
+/**
  * The function freeTokenlist frees the memory of the nodes of the list, and of the strings
  * in the nodes.
  * @param li the starting node of a list.
@@ -42,15 +51,6 @@ void freeTokenList(List li) {
   List next = li->next; // Save the next node before freeing the current node
   freeNode(li); // Free the current node
   freeTokenList(next); // Recurse into the next node
-}
-
-/**
- * The function freeNode frees the memory of the node and of the string in the node.
- * @param node the node to be freed.
-*/
-void freeNode(List node) {
-  free(node->t);
-  free(node);
 }
 
 /**
