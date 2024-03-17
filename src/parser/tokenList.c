@@ -42,11 +42,18 @@ void printList(List *li) {
  * @param li the starting node of a list.
  */
 void freeTokenList(List *li) {
-  if (!li)
+  if (li == NULL) {
     return;
-	free(li->t);
-  freeTokenList(li->next); // Recurse into the next node
-  free(li);
+  } else if (isOperatorCharacter(*li->t) && li->next != NULL) {
+    List *next = li->next;
+    free(li);
+    freeTokenList(next);
+  } else {
+    List *next = li->next;
+    free(li->t);
+    free(li);
+    freeTokenList(next);
+  }
 }
 
 /**
@@ -77,6 +84,7 @@ List *getTokenList(char *s) {
 			}
     }
   }
+  tl->next = NULL;
 	tl = head;
   return tl;
 }

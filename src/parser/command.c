@@ -91,6 +91,7 @@ void appendCommand(Command** head, Command* newCommand) {
 void changeOperator(Command* command, OperatorType newOp) {
     if (command != NULL) {
         command->nextOp = newOp;
+        //command->previous->nextOp = newOp;
     } else {
         fprintf(stderr, "Error: Attempted to change operator of NULL command\n");
     }

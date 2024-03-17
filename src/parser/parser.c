@@ -81,7 +81,7 @@ bool isOperator(char *s) {
 bool acceptToken(List *lp, char *ident) {
   if (!lp)
     return false;
-  if (strcmp(lp->t, ident) == 0) {
+  if (strcmp(lp->t, ident) == 0) {  //does not advance, still pointing
     lp = lp->next;
     return true;
   }
@@ -98,7 +98,8 @@ bool acceptToken(List *lp, char *ident) {
  * @return a bool denoting whether the command was parsed successfully.
  */
 bool parseCommand(List *lp, Command** head) {
-    return parseExecutable(lp, head) && parseOptions(lp, head);
+    bool parsed = (parseExecutable(lp, head) && parseOptions(lp, head));
+    return parsed; 
 }
 
 
@@ -111,6 +112,10 @@ bool parseExecutable(List *lp, Command **head) {
 
   if (!isValidSyntax(lp)) {
     printf("Error: invalid syntax!\n");
+    return false;
+  }
+
+  if (lp == NULL || isOperator(lp->t)) {
     return false;
   }
 
@@ -129,7 +134,7 @@ bool parseExecutable(List *lp, Command **head) {
   else
     appendCommand(head, newCmd);
 
-  lp = lp->next;  
+  lp = lp->next; 
   return true;
 }
 
@@ -139,7 +144,7 @@ bool parseExecutable(List *lp, Command **head) {
  * @return a bool denoting whether the options were parsed successfully.
  */
 bool parseOptions(List *lp, Command** head) {
-  List *tmp = lp;
+  //List *tmp = lp;
   
   if (*head == NULL) return false;
   Command* currentCmd = *head;
@@ -151,13 +156,13 @@ bool parseOptions(List *lp, Command** head) {
   // TODO: store each tmp->t as an option, if any exist
   // TODO: Allocate memory for the array of strings DO NOT FORGET TO FREE LATER
   //cu->options = (char **)malloc(sizeof(char *) * command->optionCount);
-  while (tmp != NULL && !isOperator(tmp->t)) {
-    
-    if (strcmp(tmp->t, currentCmd->command) == 0) {
-      tmp = tmp->next;
+  while (lp != NULL && !isOperator(lp->t)) {
+ 
+    if (strcmp(lp->t, currentCmd->command) == 0) {
+      lp = lp->next;
     } else {
-      addOptionToCommand(currentCmd, tmp->t);
-      tmp = tmp->next;
+      addOptionToCommand(currentCmd, lp->t);
+      lp = lp->next;
     }
   }
 
@@ -175,6 +180,7 @@ bool parseOptions(List *lp, Command** head) {
  * @return a bool denoting whether the pipeline was parsed successfully.
  */
 bool parsePipeline(List *lp, Command** head) {
+
   if (!parseCommand(lp, head)) {
     return false;
   }
@@ -291,26 +297,33 @@ bool parseFileName(List *lp) {
 }
 
 bool parseInputLineInternal(List* lp, Command** head) {
-    if (isEmpty(lp)) {
-      return true;
-    }
+  
+    while (lp != NULL) {  
+      if (currentCommandBeingParsed != NULL) {
+        for (int i = 0; i <= currentCommandBeingParsed->optionCount; i++) {
+          if (lp->t != NULL && isOperator(lp->t)) {
+            lp = lp->next;
+            i = (currentCommandBeingParsed->optionCount + 1);
+          } else {
+            lp = lp->next; 
+          }
+        }
+      }
 
-    if (!parseChain(lp, head)) {
-      printf("Error: invalid syntax!\n");
-      return false;
+      if (!parseChain(lp, head) && lp != NULL) {
+        if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
+          changeOperator(currentCommandBeingParsed, OP_AND);
+          return parseInputLineInternal(lp, head);
+        } else if (acceptToken(lp, "||")) {
+            changeOperator(currentCommandBeingParsed, OP_OR);
+            return parseInputLineInternal(lp, head);
+        } else if (acceptToken(lp, ";")) {
+            changeOperator(currentCommandBeingParsed, OP_SEQ);
+            return parseInputLineInternal(lp, head);
+        }
+      }
     }
-
-    if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
-      changeOperator(currentCommandBeingParsed, OP_AND);
-      return parseInputLineInternal(lp, head);
-    } else if (acceptToken(lp, "||")) {
-        changeOperator(currentCommandBeingParsed, OP_OR);
-        return parseInputLineInternal(lp, head);
-    } else if (acceptToken(lp, ";")) {
-        changeOperator(currentCommandBeingParsed, OP_SEQ);
-        return parseInputLineInternal(lp, head);
-    }
-  return false; 
+  return false;
 }
 
 /**
@@ -328,6 +341,7 @@ bool parseInputLineInternal(List* lp, Command** head) {
  */
 Command *parseInputLine(List *lp, int *parsedSuccessfully) {
   Command* head = NULL;
+  currentCommandBeingParsed = NULL;
 
   // Call the internal parsing function with the head pointer
   parseInputLineInternal(lp, &head);

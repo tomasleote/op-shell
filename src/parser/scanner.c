@@ -14,6 +14,11 @@ char *readInputLine() {
   // TODO: set string size dynamically
   int strLen = INITIAL_STRING_SIZE;
   int c = getchar();
+
+  if (c == EOF && feof(stdin)) { // Check if EOF is the first character read
+    return NULL; // Signal EOF to the caller
+  }
+
   int i = 0;
 
   char *s = malloc((strLen + 1) * sizeof(*s));
