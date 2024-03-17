@@ -17,7 +17,8 @@ Command *newTokenList;
  * @return 0 if successful.
  */
 int main(int argc, char *argv[],  char **envp) {
-    
+    // Disable buffering on stdout
+    setbuf(stdout, NULL);
     int parsedSuccessfully = 0;
 
     while (true) {
