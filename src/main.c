@@ -31,8 +31,8 @@ int main(int argc, char *argv[],  char **envp) {
         tokenList = getTokenList(inputLine);
         newTokenList = parseInputLine(tokenList, &parsedSuccessfully); //Problem here
 
-        //printList(tokenList);
-        //printCommandList(newTokenList);
+        printList(tokenList);
+        printCommandList(newTokenList);
         if (parsedSuccessfully) {
             execute(newTokenList, envp);
         } else {

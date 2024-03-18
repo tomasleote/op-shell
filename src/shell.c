@@ -43,6 +43,7 @@ void execute(Command* head, char **envp) {
         shouldExecuteNext = (lastExitStatus != 0);
         break;
       case OP_SEQ: // ; and \n (handled the same way)
+      case OP_PIPE: // |
       case OP_NONE: // No operator, or end of a command sequence
         shouldExecuteNext = true; // Always execute the next command
         break;

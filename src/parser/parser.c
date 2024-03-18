@@ -185,7 +185,19 @@ bool parsePipeline(List *lp, Command** head) {
     return false;
   }
 
+  if (currentCommandBeingParsed != NULL) {
+    for (int i = 0; i <= currentCommandBeingParsed->optionCount; i++) {
+      if (lp->t != NULL && isOperator(lp->t)) {
+        lp = lp->next;
+        i = (currentCommandBeingParsed->optionCount + 1);
+      } else {
+        lp = lp->next; 
+      }  
+    }
+  }
+
   if (acceptToken(lp, "|")) {
+    changeOperator(currentCommandBeingParsed, OP_PIPE);
     return parsePipeline(lp, head);
   }
 

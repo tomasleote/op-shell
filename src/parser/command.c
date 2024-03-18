@@ -91,7 +91,7 @@ void appendCommand(Command** head, Command* newCommand) {
 void changeOperator(Command* command, OperatorType newOp) {
     if (command != NULL) {
         command->nextOp = newOp;
-        //command->previous->nextOp = newOp;
+        printf("Changed operator of command %s to %d\n", command->command, newOp);
     } else {
         fprintf(stderr, "Error: Attempted to change operator of NULL command\n");
     }
@@ -121,7 +121,9 @@ void printCommandList(const Command* head) {
     while (head != NULL) {
         printf("%sCommand: %s\n", GREEN, head->command);
         printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
-        printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : head->nextOp == OP_OR ? "||" : ";");
+        printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : 
+            head->nextOp == OP_OR ? "||" : head->nextOp == OP_SEQ ? ";" : "|");
+        printf(" - Next command: %s\n", head->next != NULL ? head->next->command : "None");
         printf(" - Options:");
         if (head->optionCount > 0) {
             for (int i = 0; i < head->optionCount; i++) {

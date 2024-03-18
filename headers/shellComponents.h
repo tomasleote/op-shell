@@ -14,7 +14,8 @@ typedef enum {
     OP_NONE, // No operator, or end of a command sequence
     OP_AND,  // &&
     OP_OR,   // ||
-    OP_SEQ   // ;
+    OP_SEQ,   // ;
+    OP_PIPE  // |   
 } OperatorType;
 
 typedef struct Command {
