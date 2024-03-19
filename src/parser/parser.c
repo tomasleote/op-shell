@@ -10,39 +10,42 @@
 
 Command* currentCommandBeingParsed = NULL;
 
-//TODO: Finish implementing this, not working yet
-bool isValidSyntax(List *lp) {
+//TODO: Check this, might not be working. 
+bool isValidSyntax() {
     bool openQuote = false;
     char quoteChar = '\0';
-    List *tmp = lp;
+    List *tmp = data->currentToken; // Use the global currentToken for iteration
 
     while (tmp) {
-        char *token = tmp->t; // Correctly dereferencing to get the token
-        // Check for the presence of quotes in the token
-        for (int i = 0; token[i] != '\0'; i++) {
-            if (token[i] == '"' || token[i] == '\'') {
-                if (!openQuote) {
-                    // Opening quote found
-                    openQuote = true;
-                    quoteChar = token[i];
-                } else if (quoteChar == token[i]) {
-                    // Closing quote found
-                    openQuote = false;
-                }
-            }
+      char *token = tmp->t; // Correctly dereferencing to get the token
+      // Check for the presence of quotes in the token
+      for (int i = 0; token && token[i] != '\0'; i++) {
+        if (token[i] == '"' || token[i] == '\'') {
+          if (!openQuote) {
+          // Opening quote found
+            openQuote = true;
+            quoteChar = token[i];
+          } else if (quoteChar == token[i]) {
+            // Closing quote found
+            openQuote = false;
+            quoteChar = '\0'; // Reset quote character for next potential quote pair
+          }
         }
-        tmp = tmp->next; // Move to the next token in the list
+      }
+    tmp = tmp->next; // Move to the next token in the list
     }
 
     // If we've reached the end and a quote is still open, syntax is invalid
     if (openQuote) {
-        printf("! Error: invalid syntax!\n");
-        return false;
+      printf("! Error: invalid syntax due to unclosed quote!\n");
+      return false;
     }
 
-    //printf("Syntax is valid!\n");
+    // If additional syntax checks are needed, implement them here
+
     return true;
 }
+
 
 
 /**
@@ -78,14 +81,14 @@ bool isOperator(char *s) {
  * @param ident target identifier
  * @return a bool denoting whether the current token matches the target identifier.
  */
-bool acceptToken(List *lp, char *ident) {
-  if (!lp)
+bool acceptToken(char *ident) {
+  if (!data->currentToken)
     return false;
-  if (strcmp(lp->t, ident) == 0) {  //does not advance, still pointing
-    lp = lp->next;
+  if (strcmp(data->currentToken->t, ident) == 0) {
+    // Advance the global currentToken after matching
+    data->currentToken = data->currentToken->next;
     return true;
   }
-
   return false;
 }
 
@@ -94,47 +97,45 @@ bool acceptToken(List *lp, char *ident) {
  *
  * <command>        ::= <executable> <options>
  *
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the command was parsed successfully.
  */
-bool parseCommand(List *lp, Command** head) {
-    bool parsed = (parseExecutable(lp, head) && parseOptions(lp, head));
+bool parseCommand() {
+    bool parsed = (parseExecutable() && parseOptions());
     return parsed; 
 }
 
 
 /**
  * The function parseExecutable parses an executable.
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the executable was parsed successfully.
  */
-bool parseExecutable(List *lp, Command **head) {
+bool parseExecutable() {
 
-  if (!isValidSyntax(lp)) {
+  if (!isValidSyntax(data->currentToken)) {
     printf("Error: invalid syntax!\n");
     return false;
   }
 
-  if (lp == NULL || isOperator(lp->t)) {
+  if (data->currentToken == NULL || isOperator(data->currentToken->t)) {
     return false;
   }
 
-  char* executableName = lp->t;
+  char* executableName = data->currentToken->t;
   Command* newCmd = createCommand(executableName);
   newCmd->type = CMD_EXECUTABLE;
   currentCommandBeingParsed = newCmd;
+  data->currentCommand = newCmd;
 
-  if (newCmd == NULL) {
-    freeCommand(newCmd);
-    return false;
-  }
+  if (newCmd == NULL) return false;
   
-  if (*head == NULL)
-    *head = newCmd;
-  else
-    appendCommand(head, newCmd);
+  
+  if (data->commandList == NULL) {
+        data->commandList = newCmd;
+  } else {
+    appendCommand(&(data->commandList), newCmd);
+  }
 
-  lp = lp->next; 
+  data->currentToken = data->currentToken->next;
   return true;
 }
 
@@ -143,11 +144,10 @@ bool parseExecutable(List *lp, Command **head) {
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the options were parsed successfully.
  */
-bool parseOptions(List *lp, Command** head) {
-  //List *tmp = lp;
+bool parseOptions() {
+  Command* currentCmd = data->currentCommand;
   
-  if (*head == NULL) return false;
-  Command* currentCmd = *head;
+  if (currentCmd == NULL) return false;
 
   while (currentCmd->next != NULL) {
     currentCmd = currentCmd->next;
@@ -156,14 +156,10 @@ bool parseOptions(List *lp, Command** head) {
   // TODO: store each tmp->t as an option, if any exist
   // TODO: Allocate memory for the array of strings DO NOT FORGET TO FREE LATER
   //cu->options = (char **)malloc(sizeof(char *) * command->optionCount);
-  while (lp != NULL && !isOperator(lp->t)) {
- 
-    if (strcmp(lp->t, currentCmd->command) == 0) {
-      lp = lp->next;
-    } else {
-      addOptionToCommand(currentCmd, lp->t);
-      lp = lp->next;
-    }
+  while (data->currentToken != NULL && !isOperator(data->currentToken->t)) {
+    addOptionToCommand(currentCmd, data->currentToken->t);
+    // Directly advance the global currentToken since we're reading each token as an option
+    data->currentToken = data->currentToken->next;
   }
 
   return true;
@@ -179,26 +175,15 @@ bool parseOptions(List *lp, Command** head) {
  * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the pipeline was parsed successfully.
  */
-bool parsePipeline(List *lp, Command** head) {
+bool parsePipeline() {
 
-  if (!parseCommand(lp, head)) {
+  if (!parseCommand()) {
     return false;
   }
 
-  if (currentCommandBeingParsed != NULL) {
-    for (int i = 0; i <= currentCommandBeingParsed->optionCount; i++) {
-      if (lp->t != NULL && isOperator(lp->t)) {
-        lp = lp->next;
-        i = (currentCommandBeingParsed->optionCount + 1);
-      } else {
-        lp = lp->next; 
-      }  
-    }
-  }
-
-  if (acceptToken(lp, "|")) {
-    changeOperator(currentCommandBeingParsed, OP_PIPE);
-    return parsePipeline(lp, head);
+  if (acceptToken("|")) {
+    changeOperator(data->currentCommand, OP_PIPE);
+    return parsePipeline();
   }
 
   return true;
@@ -210,25 +195,23 @@ bool parsePipeline(List *lp, Command** head) {
  * <chain>              ::= <pipeline> <redirections>
  *                       |  <builtin> <options>
  *
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the chain was parsed successfully.
  */
-bool parseChain(List *lp, Command** head) {
-  if (parseBuiltIn(lp, head)) {
-    return parseOptions(lp, head);
+bool parseChain() {
+  if (parseBuiltIn()) {
+    return parseOptions();
   }
-  if (parsePipeline(lp, head)) {
-    return parseRedirections(lp);
+  if (parsePipeline()) {
+    return parseRedirections();
   }
   return false;
 }
 
 /**
  * The function parseBuiltIn parses a builtin.
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the builtin was parsed successfully.
  */
-bool parseBuiltIn(List *lp, Command** head) {
+bool parseBuiltIn() {
 
   char *builtIns[] = {
       "exit",
@@ -237,17 +220,12 @@ bool parseBuiltIn(List *lp, Command** head) {
       NULL};
 
   for (int i = 0; builtIns[i] != NULL; i++) {
-    if (acceptToken(lp, builtIns[i])) {
+    if (acceptToken(builtIns[i])) {
       Command* newCmd = createCommand(builtIns[i]);
       newCmd->type = CMD_BUILTIN; // Set as built-in command
       currentCommandBeingParsed = newCmd;
-
-      if (*head == NULL) {
-        *head = newCmd;
-      } else {
-        appendCommand(head, newCmd);
-      }
-
+      data->currentCommand = newCmd;
+      appendCommand(&(data->commandList), newCmd);
       return true;
     }
   }
@@ -261,29 +239,31 @@ bool parseBuiltIn(List *lp, Command** head) {
  * <redirections>       ::= <pipeline> <redirections>
  *                       |  <builtin> <options>
  *
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the redirections were parsed successfully.
  */
-bool parseRedirections(List *lp) {
-  if (isEmpty(lp)) {
+bool parseRedirections() {
+  if (isEmpty(data->currentToken)) {
     return true;
   }
 
-  if (acceptToken(lp, "<")) {
+  char operator = '<';
 
-    if (!parseFileName(lp)) {
-        return false;
-    } else if (acceptToken(lp, ">")) { 
-      return parseFileName(lp);
+  if (acceptToken("<")) {
+    if (!parseFileName(operator)) {
+      return false;
+    } else if (acceptToken(">")) {
+      operator = '>';
+      return parseFileName(operator);
     } else {
       return true;
     }
-  } else if (acceptToken(lp, ">")) {
-    
-    if (!parseFileName(lp)) {
+  } else if (acceptToken(">")) {
+    operator = '>';
+    if (!parseFileName(operator)) {
       return false;
-    } else if (acceptToken(lp, "<")) {
-      return parseFileName(lp);
+    } else if (acceptToken("<")) {
+      operator = '<';
+      return parseFileName(operator);
     } else {
       return true;
     }
@@ -294,47 +274,51 @@ bool parseRedirections(List *lp) {
 
 /**
  * The function parseFileName parses a filename.
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the filename was parsed successfully.
  */
-bool parseFileName(List *lp) {
-  List *tmp = lp;
+bool parseFileName(char operatorChar) {
 
-  char *fileName = tmp->t;
-  if (fileName == NULL) {
+  if (data->currentToken == NULL || data->currentToken->t == NULL) {
     return false;
   }
-  tmp = tmp->next;
+
+  char *fileName = data->currentToken->t;
+  if (operatorChar == '<' && fileName != NULL) {
+    data->currentCommand->inputFile = strdup(fileName);
+  } else if (operatorChar == '>' && fileName != NULL) {
+    data->currentCommand->inputFile = strdup(fileName);
+  }
+  
+  data->currentToken = data->currentToken->next;
   return true;
 }
 
-bool parseInputLineInternal(List* lp, Command** head) {
-  
-    while (lp != NULL) {  
-      if (currentCommandBeingParsed != NULL) {
-        for (int i = 0; i <= currentCommandBeingParsed->optionCount; i++) {
-          if (lp->t != NULL && isOperator(lp->t)) {
-            lp = lp->next;
-            i = (currentCommandBeingParsed->optionCount + 1);
-          } else {
-            lp = lp->next; 
-          }
-        }
-      }
+/**
+ * The function parseInputLineInternal parses an inputline according to the grammar:
+ * <inputline>      ::= <chain> & <inputline>
+ *                   | <chain> && <inputline>
+ *                   | <chain> || <inputline>
+ *                   | <chain> ; <inputline>
+ *                   | <chain>
+ *                   | <empty>
+ * @return a bool denoting whether the inputline was parsed successfully.
+*/
+bool parseInputLineInternal() {
 
-      if (!parseChain(lp, head) && lp != NULL) {
-        if (acceptToken(lp, "&") || acceptToken(lp, "&&")) {
-          changeOperator(currentCommandBeingParsed, OP_AND);
-          return parseInputLineInternal(lp, head);
-        } else if (acceptToken(lp, "||")) {
-            changeOperator(currentCommandBeingParsed, OP_OR);
-            return parseInputLineInternal(lp, head);
-        } else if (acceptToken(lp, ";")) {
-            changeOperator(currentCommandBeingParsed, OP_SEQ);
-            return parseInputLineInternal(lp, head);
-        }
+  while (data->currentToken != NULL) {  
+    if (!parseChain() && data->currentToken != NULL) {
+      if (acceptToken("&") || acceptToken("&&")) {
+        changeOperator(data->currentCommand, OP_AND);
+        continue;
+      } else if (acceptToken("||")) {
+          changeOperator(data->currentCommand, OP_OR);
+          continue; 
+      } else if (acceptToken(";")) {
+          changeOperator(data->currentCommand, OP_SEQ);
+          continue;
       }
     }
+  }
   return false;
 }
 
@@ -347,16 +331,12 @@ bool parseInputLineInternal(List* lp, Command** head) {
  *                   | <chain> ; <inputline>
  *                   | <chain>
  *                   | <empty>
- *
- * @param lp List pointer to the start of the tokenlist.
  * @return a bool denoting whether the inputline was parsed successfully.
  */
-Command *parseInputLine(List *lp, int *parsedSuccessfully) {
-  Command* head = NULL;
+Command *parseInputLine() {
   currentCommandBeingParsed = NULL;
 
   // Call the internal parsing function with the head pointer
-  parseInputLineInternal(lp, &head);
-  *parsedSuccessfully = 1;
-  return (head);
+  parseInputLineInternal();
+  return (data->commandList);
 }

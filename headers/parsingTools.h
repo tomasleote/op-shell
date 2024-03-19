@@ -61,14 +61,32 @@ char *matchOperator(char *s, int *start);
 
 
 // Function prototypes from parser.c
-Command* parseInputLine(List *lp, int *parsedSuccessfully);
-bool parseCommand(List *lp, Command** head);
-bool parseExecutable(List *lp, Command **head);
-bool parseOptions(List *lp, Command** head);
-bool parsePipeline(List *lp, Command** head);
-bool parseChain(List *lp, Command** head);
-bool parseBuiltIn(List *lp, Command **head);
-bool parseRedirections(List *lp);
-bool parseFileName(List *lp);
+Command* parseInputLine();
+bool parseCommand();
+bool parseExecutable();
+bool parseOptions();
+bool parsePipeline();
+bool parseChain();
+bool parseBuiltIn();
+bool parseRedirections();
+bool parseFileName(char operator);
+
+
+
+typedef struct shellData {
+    List *tokenList;
+    Command *commandList;
+    Command *currentCommand;
+    List *currentToken; // To manage the current position in the token list globally
+    // Include other relevant fields as needed
+} shellData;
+
+// In data.c
+extern shellData *data;
+
+shellData *getShellData(void);
+void shellDataInit(char *inputLine);
+void shellDataDestroy(void);
+
 
 #endif

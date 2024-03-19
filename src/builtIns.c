@@ -1,4 +1,5 @@
 #include "shellComponents.h"
+#include "parsingTools.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +18,7 @@ BuiltInCommand getBuiltInCommand(const char *command) {
 }
 
 void exitShell(char **args) {
-    freeMemory(); 
+    shellDataDestroy();
     exit(0);
 }
 

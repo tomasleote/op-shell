@@ -6,8 +6,6 @@
 #include "parsingTools.h"
 
 char *inputLine;
-List *tokenList;
-Command *newTokenList;
 
 /**
  * Main function of the shell.
@@ -19,7 +17,7 @@ Command *newTokenList;
 int main(int argc, char *argv[],  char **envp) {
     // Disable buffering on stdout
     setbuf(stdout, NULL);
-    int parsedSuccessfully = 0;
+    int parsedSuccessfully = 1;
 
     while (true) {
         inputLine = readInputLine();
@@ -29,25 +27,16 @@ int main(int argc, char *argv[],  char **envp) {
             break; // Exit the loop
         }
 
-        tokenList = getTokenList(inputLine);
-        newTokenList = parseInputLine(tokenList, &parsedSuccessfully); //Problem here
-
-        printList(tokenList);
-        printCommandList(newTokenList);
+        shellDataInit(inputLine);
+        
         if (parsedSuccessfully) {
-            execute(newTokenList, envp);
+            execute(data->commandList, envp);
         } else {
             printf("invalid syntax!\n");
         }
         
-        freeMemory(); 
+        free(inputLine);
+        shellDataDestroy();
     }
     return 0;
-}
-
-void freeMemory() {
-    
-    free(inputLine);
-    freeTokenList(tokenList);
-    freeCommandList(newTokenList);
 }

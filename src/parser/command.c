@@ -38,6 +38,8 @@ Command* createCommand(char* commandName) {
     newCommand->pipes[0] = -1;
     newCommand->pipes[1] = -1;
     newCommand->nextOp = OP_NONE;
+    newCommand->inputFile = NULL;
+    newCommand->outputFile = NULL;
 
     return newCommand;
 }
@@ -61,6 +63,8 @@ void freeCommand(Command* command) {
             free(command->options[i]);
         }
         free(command->options);
+        free(command->inputFile);
+        free(command->outputFile);
         free(command);
     }
 }
@@ -91,7 +95,6 @@ void appendCommand(Command** head, Command* newCommand) {
 void changeOperator(Command* command, OperatorType newOp) {
     if (command != NULL) {
         command->nextOp = newOp;
-        printf("Changed operator of command %s to %d\n", command->command, newOp);
     } else {
         fprintf(stderr, "Error: Attempted to change operator of NULL command\n");
     }

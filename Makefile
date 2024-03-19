@@ -7,6 +7,7 @@ INC_DIR = headers #inc
 INC_FLAGS = -I $(INC_DIR)
 SRC_FILES =	main.c \
 			shell.c \
+			shellData.c \
 			parser/command.c \
 			parser/scanner.c \
 			parser/parser.c \

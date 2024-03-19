@@ -28,6 +28,8 @@ typedef struct Command {
     char **options;
     int optionCount;
     OperatorType nextOp;
+    char* inputFile;
+    char* outputFile;
 } Command;
 
 //Function prototypes from main.c
