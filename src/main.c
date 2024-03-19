@@ -30,7 +30,7 @@ int main(int argc, char *argv[],  char **envp) {
         shellDataInit(inputLine);
         
         if (parsedSuccessfully) {
-            execute(data->commandList, envp);
+            execute(envp);
         } else {
             printf("invalid syntax!\n");
         }

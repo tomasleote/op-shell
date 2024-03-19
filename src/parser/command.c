@@ -127,6 +127,8 @@ void printCommandList(const Command* head) {
         printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : 
             head->nextOp == OP_OR ? "||" : head->nextOp == OP_SEQ ? ";" : "|");
         printf(" - Next command: %s\n", head->next != NULL ? head->next->command : "None");
+        printf(" - Input File: %s\n", head->inputFile != NULL ? head->inputFile : "None");
+        printf(" - Output File: %s\n", head->outputFile != NULL ? head->outputFile : "None");
         printf(" - Options:");
         if (head->optionCount > 0) {
             for (int i = 0; i < head->optionCount; i++) {

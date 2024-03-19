@@ -55,16 +55,16 @@ typedef enum {
 } BuiltInCommand;
 
 // Function prototypes from builtIns.c
-void exitShell(char **args);
-void statusShell(char **args);
-void executeBuiltIns(Command* current);
-int cdShell(Command* current);
+void exitShell();
+void statusShell();
+void executeBuiltIns();
+int cdShell();
 BuiltInCommand getBuiltInCommand(const char *command);
 
 // Function prototypes from shell.c
-void execute(Command* head, char **envp);
-void executeCommand(Command* current, char **envp);
-void addCommandToOptions(Command* current);
+void execute(char **envp);
+void executeCommand(char **envp);
+void addCommandToOptions();
 void updateLastExitStatus (int status);
 
 #endif

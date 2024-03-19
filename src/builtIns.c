@@ -6,7 +6,6 @@
 #include <unistd.h>
 #define PATH_MAX 4096
 
-// In builtIns.c
 extern int lastExitStatus;
 static char lastDirectory[PATH_MAX] = "";
 
@@ -17,36 +16,36 @@ BuiltInCommand getBuiltInCommand(const char *command) {
     return CMD_UNKNOWN;
 }
 
-void exitShell(char **args) {
+void exitShell() {
     shellDataDestroy();
     exit(0);
 }
 
-void statusShell(char **args) {
+void statusShell() {
     printf("The most recent exit code is: %d\n", lastExitStatus);
 }
 
-void executeBuiltIns(Command* current) {
-    BuiltInCommand cmd = getBuiltInCommand(current->command);
+void executeBuiltIns() {
+    BuiltInCommand cmd = getBuiltInCommand(data->currentCommand->command);
     int statusCode; 
     switch (cmd) {
         case CMD_EXIT:
-            exitShell(current->options);
+            exitShell();
             break;
         case CMD_STATUS:
-            statusShell(current->options);
+            statusShell();
             break;
         case CMD_CD:
-            statusCode = cdShell(current);
+            statusCode = cdShell();
             updateLastExitStatus(statusCode);
             break;
         case CMD_UNKNOWN:
-            printf("Unknown command: %s\n", current->command);
+            printf("Unknown command: %s\n", data->currentCommand->command);
             break;
     }
 }
 
-int cdShell(Command* current) {
+int cdShell() {
     char cwd[PATH_MAX];
     char *targetDir; 
 
@@ -55,11 +54,11 @@ int cdShell(Command* current) {
         return 2;
     }
 
-    if (!(current->options)) {
+    if (!(data->currentCommand->options)) {
         printf("Error: cd requires folder to navigate to!\n");
         return 2; 
     } else {
-        targetDir = current->options[0];
+        targetDir = data->currentCommand->options[0];
     }
 
     // Handling 'cd ~' to go to the home directory

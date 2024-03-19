@@ -18,24 +18,22 @@ void updateLastExitStatus (int status) {
  * @param head pointer to current element to execute.
  * @param envp The environment variables.
 */
-void execute(Command* head, char **envp) {
-  Command* current = head;
+void execute(char **envp) {
+  data->currentCommand = data->commandList;
   
-  while (current) {
-
-    //printCommandList(current);
+  while (data->currentCommand) {
 
     bool shouldExecuteNext = true; 
 
-    if (current->type == CMD_BUILTIN) {
+    if (data->currentCommand->type == CMD_BUILTIN) {
       //printf("Executing built-in %s\n", current->command);
-      executeBuiltIns(current);
+      executeBuiltIns();
     } else {
       //printf("Executing command %s\n", current->command);
-      executeCommand(current, envp);
+      executeCommand(envp);
     }
 
-    switch (current->nextOp) {
+    switch (data->currentCommand->nextOp) {
       case OP_AND: // &&
         shouldExecuteNext = (lastExitStatus == 0);
         break;
@@ -49,13 +47,14 @@ void execute(Command* head, char **envp) {
         break;
     }
 
-    if (!shouldExecuteNext) {
-      if (current->next != NULL) {
-        current = current->next; // Skip next command
-      } 
+    // Decision to skip the next command or continue
+    if (!shouldExecuteNext && data->currentCommand->next != NULL) {
+      // Skip next command if conditions dictate
+      data->currentCommand = data->currentCommand->next->next;
+    } else {
+      // Proceed to the next command normally
+      data->currentCommand = data->currentCommand->next;
     }
-
-    current = current != NULL ? current->next : NULL;
   }
 }
 
@@ -64,7 +63,7 @@ void execute(Command* head, char **envp) {
  * @param current The command to execute.
  * @param envp The environment variables.
 */
-void executeCommand(Command* current, char **envp) {
+void executeCommand(char **envp) {
   
   pid_t pid = fork();
   
@@ -74,8 +73,8 @@ void executeCommand(Command* current, char **envp) {
   }
   
   if (pid == 0) {
-    addCommandToOptions(current);
-    if (execvp(current->command, current->options) == -1) {
+    addCommandToOptions();
+    if (execvp(data->currentCommand->command, data->currentCommand->options) == -1) {
       printf("Error: command not found!\n");
       // Free all data!
       exit(127); //errno
@@ -93,13 +92,13 @@ void executeCommand(Command* current, char **envp) {
  * @param current The command to add.
  * @return void
 */
-void addCommandToOptions (Command* current) {
+void addCommandToOptions () {
   // Create an array for execvp arguments
-  char **args = malloc((current->optionCount + 2) * sizeof(char*)); // +2 for command and NULL terminator
-  args[0] = current->command; // Set command as first argument
-  for (int i = 0; i < current->optionCount; i++) {
-    args[i + 1] = current->options[i]; // Copy options
+  char **args = malloc((data->currentCommand->optionCount + 2) * sizeof(char*)); // +2 for command and NULL terminator
+  args[0] = data->currentCommand->command; // Set command as first argument
+  for (int i = 0; i < data->currentCommand->optionCount; i++) {
+    args[i + 1] = data->currentCommand->options[i]; // Copy options
   }
-  args[current->optionCount + 1] = NULL; // NULL-terminate the array
-  current->options = args;
+  args[data->currentCommand->optionCount + 1] = NULL; // NULL-terminate the array
+  data->currentCommand->options = args;
 }

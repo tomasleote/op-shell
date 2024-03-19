@@ -286,7 +286,7 @@ bool parseFileName(char operatorChar) {
   if (operatorChar == '<' && fileName != NULL) {
     data->currentCommand->inputFile = strdup(fileName);
   } else if (operatorChar == '>' && fileName != NULL) {
-    data->currentCommand->inputFile = strdup(fileName);
+    data->currentCommand->outputFile = strdup(fileName);
   }
   
   data->currentToken = data->currentToken->next;
