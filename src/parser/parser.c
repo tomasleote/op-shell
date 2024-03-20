@@ -130,7 +130,7 @@ bool parseExecutable() {
   
   
   if (data->commandList == NULL) {
-        data->commandList = newCmd;
+    data->commandList = newCmd;
   } else {
     appendCommand(&(data->commandList), newCmd);
   }
@@ -183,6 +183,7 @@ bool parsePipeline() {
 
   if (acceptToken("|")) {
     changeOperator(data->currentCommand, OP_PIPE);
+    data->isPipeline = true;
     return parsePipeline();
   }
 
@@ -284,9 +285,9 @@ bool parseFileName(char operatorChar) {
 
   char *fileName = data->currentToken->t;
   if (operatorChar == '<' && fileName != NULL) {
-    data->currentCommand->inputFile = strdup(fileName);
+    data->inputPath = strdup(fileName);
   } else if (operatorChar == '>' && fileName != NULL) {
-    data->currentCommand->outputFile = strdup(fileName);
+    data->outputPath = strdup(fileName);
   }
   
   data->currentToken = data->currentToken->next;

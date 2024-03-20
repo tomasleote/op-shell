@@ -2,6 +2,9 @@
 #define SHELLCOMPONENTS_H
 
 #include <stdbool.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 // From command.c
 typedef enum {
@@ -28,8 +31,7 @@ typedef struct Command {
     char **options;
     int optionCount;
     OperatorType nextOp;
-    char* inputFile;
-    char* outputFile;
+    pid_t pid;
 } Command;
 
 //Function prototypes from main.c
@@ -64,7 +66,17 @@ BuiltInCommand getBuiltInCommand(const char *command);
 // Function prototypes from shell.c
 void execute(char **envp);
 void executeCommand(char **envp);
-void addCommandToOptions();
 void updateLastExitStatus (int status);
+void childExecution();
+
+// Function prototypes from utils.c
+void openPipelines();
+void closePipelines();
+void closeCurrentFds();
+void closeFds();
+char** buildArguments();
+void redirectStds(); 
+
+
 
 #endif

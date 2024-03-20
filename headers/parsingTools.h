@@ -77,8 +77,10 @@ typedef struct shellData {
     List *tokenList;
     Command *commandList;
     Command *currentCommand;
-    List *currentToken; // To manage the current position in the token list globally
-    // Include other relevant fields as needed
+    List *currentToken; 
+    char* inputPath;
+    char* outputPath;
+    bool isPipeline; 
 } shellData;
 
 // In data.c
@@ -87,6 +89,7 @@ extern shellData *data;
 shellData *getShellData(void);
 void shellDataInit(char *inputLine);
 void shellDataDestroy(void);
+void printData();
 
 
 #endif

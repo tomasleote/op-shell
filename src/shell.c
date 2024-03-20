@@ -20,16 +20,16 @@ void updateLastExitStatus (int status) {
 */
 void execute(char **envp) {
   data->currentCommand = data->commandList;
+
+  openPipelines();
   
   while (data->currentCommand) {
 
     bool shouldExecuteNext = true; 
 
     if (data->currentCommand->type == CMD_BUILTIN) {
-      //printf("Executing built-in %s\n", current->command);
       executeBuiltIns();
     } else {
-      //printf("Executing command %s\n", current->command);
       executeCommand(envp);
     }
 
@@ -49,13 +49,13 @@ void execute(char **envp) {
 
     // Decision to skip the next command or continue
     if (!shouldExecuteNext && data->currentCommand->next != NULL) {
-      // Skip next command if conditions dictate
       data->currentCommand = data->currentCommand->next->next;
     } else {
-      // Proceed to the next command normally
       data->currentCommand = data->currentCommand->next;
     }
   }
+
+  closePipelines();
 }
 
 /**
@@ -66,39 +66,39 @@ void execute(char **envp) {
 void executeCommand(char **envp) {
   
   pid_t pid = fork();
+  data->currentCommand->pid = pid;
   
   if (pid == -1) {
     perror("fork");
     return;
-  }
-  
-  if (pid == 0) {
-    addCommandToOptions();
-    if (execvp(data->currentCommand->command, data->currentCommand->options) == -1) {
-      printf("Error: command not found!\n");
-      // Free all data!
-      exit(127); //errno
-    }
+  } else if (pid == 0) {
+    signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
+    //addCommandToOptions();
+    redirectStds();
+    closeFds();
+    childExecution(); 
   } else if (pid > 0) {
     int status;
     waitpid(pid, &status, 0); // Wait for the command to complete
     updateLastExitStatus(WEXITSTATUS(status));
-  }
-      
+    closeCurrentFds();
+  }     
 }
 
-/**
- * Adds a command to the options array.
- * @param current The command to add.
- * @return void
-*/
-void addCommandToOptions () {
-  // Create an array for execvp arguments
-  char **args = malloc((data->currentCommand->optionCount + 2) * sizeof(char*)); // +2 for command and NULL terminator
-  args[0] = data->currentCommand->command; // Set command as first argument
-  for (int i = 0; i < data->currentCommand->optionCount; i++) {
-    args[i + 1] = data->currentCommand->options[i]; // Copy options
-  }
-  args[data->currentCommand->optionCount + 1] = NULL; // NULL-terminate the array
-  data->currentCommand->options = args;
+void childExecution() {
+    Command* cmd = data->currentCommand;
+
+    if (cmd->type == CMD_BUILTIN) {
+        // Execute the built-in command. This assumes you have a function to handle built-in commands directly.
+        executeBuiltIns(); // Note: This function should now be adapted to work without arguments, using the global `data`.
+    } else {
+        // For external commands, build the arguments list including the command itself
+        char** args = buildArguments();
+
+        // Execute the command with arguments
+        if (execvp(cmd->command, args) == -1) {
+            perror("execvp failed");
+            exit(EXIT_FAILURE);
+        }
+    }
 }

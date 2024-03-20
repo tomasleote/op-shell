@@ -38,8 +38,7 @@ Command* createCommand(char* commandName) {
     newCommand->pipes[0] = -1;
     newCommand->pipes[1] = -1;
     newCommand->nextOp = OP_NONE;
-    newCommand->inputFile = NULL;
-    newCommand->outputFile = NULL;
+    newCommand->pid = -1;
 
     return newCommand;
 }
@@ -63,8 +62,6 @@ void freeCommand(Command* command) {
             free(command->options[i]);
         }
         free(command->options);
-        free(command->inputFile);
-        free(command->outputFile);
         free(command);
     }
 }
@@ -127,8 +124,8 @@ void printCommandList(const Command* head) {
         printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : 
             head->nextOp == OP_OR ? "||" : head->nextOp == OP_SEQ ? ";" : "|");
         printf(" - Next command: %s\n", head->next != NULL ? head->next->command : "None");
-        printf(" - Input File: %s\n", head->inputFile != NULL ? head->inputFile : "None");
-        printf(" - Output File: %s\n", head->outputFile != NULL ? head->outputFile : "None");
+        printf(" - Previous command: %s\n", head->previous != NULL ? head->previous->command : "None");
+        printf(" - pid: %d\n", head->pid);
         printf(" - Options:");
         if (head->optionCount > 0) {
             for (int i = 0; i < head->optionCount; i++) {
