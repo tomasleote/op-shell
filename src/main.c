@@ -3,7 +3,9 @@
 #include <stdbool.h>
 #include <unistd.h> 
 #include "shellComponents.h"
-#include "parsingTools.h" 
+#include "parsingTools.h"
+
+char *inputLine;
 
 /**
  * Main function of the shell.
@@ -15,10 +17,10 @@
 int main(int argc, char *argv[],  char **envp) {
     // Disable buffering on stdout
     setbuf(stdout, NULL);
-    int parsedSuccessfully = 0;
+    int parsedSuccessfully = 1;
 
     while (true) {
-        char *inputLine = readInputLine();
+        inputLine = readInputLine();
         
         if (inputLine == NULL) {
             free(inputLine);
@@ -26,14 +28,12 @@ int main(int argc, char *argv[],  char **envp) {
         }
 
         shellDataInit(inputLine);
-
-        if (data->commandList) {
-            parsedSuccessfully = 1;    
-        }
         
         if (parsedSuccessfully) {
             execute(envp);
-        } 
+        } else {
+            printf("invalid syntax!\n");
+        }
         
         free(inputLine);
         shellDataDestroy();

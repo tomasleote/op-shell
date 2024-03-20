@@ -7,6 +7,12 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+int lastExitStatus = 0;
+
+void updateLastExitStatus (int status) {
+  lastExitStatus = status;
+}
+
 /**
  * Executes the linked list.
  * @param head pointer to current element to execute.
@@ -29,15 +35,15 @@ void execute(char **envp) {
 
     switch (data->currentCommand->nextOp) {
       case OP_AND: // &&
-        shouldExecuteNext = (data->lastExitStatus == 0);
+        shouldExecuteNext = (lastExitStatus == 0);
         break;
       case OP_OR: // ||
-        shouldExecuteNext = (data->lastExitStatus != 0);
+        shouldExecuteNext = (lastExitStatus != 0);
         break;
       case OP_SEQ: // ; and \n (handled the same way)
       case OP_PIPE: // |
       case OP_NONE: // No operator, or end of a command sequence
-        shouldExecuteNext = true;
+        shouldExecuteNext = true; // Always execute the next command
         break;
     }
 
@@ -48,8 +54,8 @@ void execute(char **envp) {
       data->currentCommand = data->currentCommand->next;
     }
   }
-  waitProcesses();
-  closePipelines(); 
+
+  closePipelines();
 }
 
 /**
@@ -66,28 +72,33 @@ void executeCommand(char **envp) {
     perror("fork");
     return;
   } else if (pid == 0) {
-    //signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
+    signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
+    //addCommandToOptions();
     redirectStds();
     closeFds();
-    closePipelines();
     childExecution(); 
   } else if (pid > 0) {
+    int status;
+    waitpid(pid, &status, 0); // Wait for the command to complete
+    updateLastExitStatus(WEXITSTATUS(status));
     closeCurrentFds();
   }     
 }
 
-/**
- * Executes the child process.
-*/
 void childExecution() {
     Command* cmd = data->currentCommand;
 
     if (cmd->type == CMD_BUILTIN) {
-      executeBuiltIns(); 
+        // Execute the built-in command. This assumes you have a function to handle built-in commands directly.
+        executeBuiltIns(); // Note: This function should now be adapted to work without arguments, using the global `data`.
     } else {
-      char** args = buildArguments();
-      if (execvp(cmd->command, args) == -1) {
-        handleExecvpError();
-      }
+        // For external commands, build the arguments list including the command itself
+        char** args = buildArguments();
+
+        // Execute the command with arguments
+        if (execvp(cmd->command, args) == -1) {
+            perror("execvp failed");
+            exit(EXIT_FAILURE);
+        }
     }
 }

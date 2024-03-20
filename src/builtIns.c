@@ -6,13 +6,9 @@
 #include <unistd.h>
 #define PATH_MAX 4096
 
-static char lastDirectory[PATH_MAX] = "";   // The last directory visited
+extern int lastExitStatus;
+static char lastDirectory[PATH_MAX] = "";
 
-/**
- * The function getBuiltInCommand returns the built-in command type of a given command.
- * @param command The command to check
- * @return The built-in command type
-*/
 BuiltInCommand getBuiltInCommand(const char *command) {
     if (strcmp(command, "exit") == 0) return CMD_EXIT;
     if (strcmp(command, "status") == 0) return CMD_STATUS;
@@ -20,26 +16,15 @@ BuiltInCommand getBuiltInCommand(const char *command) {
     return CMD_UNKNOWN;
 }
 
-/**
- * The function exitShell exits the shell.
-*/
 void exitShell() {
     shellDataDestroy();
     exit(0);
 }
 
-/**
- * The function statusShell prints the most recent exit status.
-*/
 void statusShell() {
-    printf("The most recent exit code is: %d\n", data->lastExitStatus);
+    printf("The most recent exit code is: %d\n", lastExitStatus);
 }
 
-/**
- * This function executes built-in commands.
- * If the command is not a built-in command, it prints an error message.
- * If the command is a built-in command, it executes it.
-*/
 void executeBuiltIns() {
     BuiltInCommand cmd = getBuiltInCommand(data->currentCommand->command);
     int statusCode; 
@@ -60,10 +45,6 @@ void executeBuiltIns() {
     }
 }
 
-/**
- * The function cdShell changes the current directory.
- * @return 0 if the directory change was successful, 2 if it was not.
-*/
 int cdShell() {
     char cwd[PATH_MAX];
     char *targetDir; 

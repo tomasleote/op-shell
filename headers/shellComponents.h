@@ -6,11 +6,6 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-#ifndef PATH_MAX
-#define PATH_MAX 4096
-#endif
-
-
 // From command.c
 typedef enum {
     CMD_EXTERNAL,
@@ -49,8 +44,7 @@ void freeCommand(Command* command);
 void freeCommandList(Command* head);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
-void printCommandList(Command* head); 
-void printCommand(Command* command);
+void printCommandList(const Command* head); 
 char* strdup(const char* s);
 void changeOperator(Command* command, OperatorType newOp);
 
@@ -72,6 +66,7 @@ BuiltInCommand getBuiltInCommand(const char *command);
 // Function prototypes from shell.c
 void execute(char **envp);
 void executeCommand(char **envp);
+void updateLastExitStatus (int status);
 void childExecution();
 
 // Function prototypes from utils.c
@@ -81,15 +76,7 @@ void closeCurrentFds();
 void closeFds();
 char** buildArguments();
 void redirectStds(); 
-const char* commandTypeToString(CommandType type);
-const char* operatorTypeToString(OperatorType op);
-void waitProcesses();
-void updateLastExitStatus (int status);
-void handleExecvpError();  
-void closePipes(); 
-bool commandExists(const char* cmd); 
-bool isValidSyntax(); 
-bool acceptToken(char *ident);
-bool isOperator(char *s);
+
+
 
 #endif

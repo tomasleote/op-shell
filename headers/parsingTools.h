@@ -14,7 +14,6 @@
 #define MAGENTA "\033[35m"      /* Magenta */
 #define CYAN    "\033[36m"      /* Cyan */
 #define WHITE   "\033[37m"      /* White */
-#define PURPLE "\033[0;35m"     /* Purple */
 
 // Token and list definitions from scanner.c
 typedef enum {
@@ -82,7 +81,6 @@ typedef struct shellData {
     char* inputPath;
     char* outputPath;
     bool isPipeline; 
-    int lastExitStatus; 
 } shellData;
 
 // In data.c

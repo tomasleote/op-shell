@@ -5,11 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-/**
- * Function to convert a command type to a string
- * @param type The command type
- * @return The string representation of the command type
-*/
 char* strdup(const char* s) {
     size_t len = strlen(s) + 1; // +1 for the null terminator
     char* newStr = malloc(len);
@@ -17,12 +12,7 @@ char* strdup(const char* s) {
     return memcpy(newStr, s, len);
 }
 
-/**
- * Function to create a new command
- * @param commandName The name of the command
- * @return The new command
- * @return NULL if the command could not be created
- */
+// Function to create a new command
 Command* createCommand(char* commandName) {
     Command* newCommand = (Command*)malloc(sizeof(Command));
     if (newCommand == NULL) {
@@ -53,11 +43,7 @@ Command* createCommand(char* commandName) {
     return newCommand;
 }
 
-/*
-* Function to add an option to a command
-* @param command The command to add the option to
-* @param option The option to add
-*/
+// Function to add an option to a command
 void addOptionToCommand(Command* command, char* option) {
     command->options = realloc(command->options, sizeof(char*) * (command->optionCount + 1));
     if (command->options == NULL) {
@@ -68,11 +54,7 @@ void addOptionToCommand(Command* command, char* option) {
     command->optionCount++;
 }
 
-/**
- * Function to free a command and its associated resources  
- * @param command The command to free
- * @return NULL
-*/
+// Function to free a command and its associated resources
 void freeCommand(Command* command) {
     if (command != NULL) {
         free(command->command);
@@ -84,10 +66,7 @@ void freeCommand(Command* command) {
     }
 }
 
-/*
-* Function to free a list of commands
-* @param head The head of the list to free
-*/
+// Function to free a list of commands
 void freeCommandList(Command* head) {
     while (head != NULL) {
         Command* next = head->next;
@@ -96,11 +75,7 @@ void freeCommandList(Command* head) {
     }
 }
 
-/**
- * Function to append a command to the end of a list
- * @param head The head of the list
- * @param newCommand The command to append
-*/
+// Function to append a command to the end of a list
 void appendCommand(Command** head, Command* newCommand) {
     if (*head == NULL) {
         *head = newCommand;
@@ -114,11 +89,6 @@ void appendCommand(Command** head, Command* newCommand) {
     }
 }
 
-/**
- * Function to change the operator of a command
- * @param command The command to change the operator of
- * @param newOp The new operator
-*/
 void changeOperator(Command* command, OperatorType newOp) {
     if (command != NULL) {
         command->nextOp = newOp;
@@ -127,11 +97,7 @@ void changeOperator(Command* command, OperatorType newOp) {
     }
 }
 
-/*
-* Function to delete a command from the list
-* @param head The head of the list
-* @param command The command to delete
-*/
+// Function to delete a command from the list
 void deleteCommand(Command** head, Command* command) {
     if (*head == NULL || command == NULL) return;
 
@@ -150,50 +116,40 @@ void deleteCommand(Command** head, Command* command) {
     freeCommand(command);
 }
 
-/**
- * Function to print a command
- * @param command The command to print
-*/
-void printCommand(Command* node) {
-    if (!node) return;
-
-    printf("  %sCommand%s: %s%s%s,\n", YELLOW, WHITE, GREEN, node->command ? node->command : "NULL", WHITE);
-    
-    if(node->previous) {
-        printf("  %sPrevious%s: %s%p%s (%s%s%s),\n", YELLOW, WHITE, PURPLE, (void*)node->previous, WHITE, GREEN, node->previous->command ? node->previous->command : "NULL", WHITE);
-    } else {
-        printf("  %sPrevious%s: %sNULL%s,\n", YELLOW, WHITE, PURPLE, WHITE);
-    }
-
-    if(node->next) {
-        printf("  %sNext%s: %s%p%s (%s%s%s),\n", YELLOW, WHITE, PURPLE, (void*)node->next, WHITE, GREEN, node->next->command ? node->next->command : "NULL", WHITE);
-    } else {
-        printf("  %sNext%s: %sNULL%s,\n", YELLOW, WHITE, PURPLE, WHITE);
-    }
-
-    printf("  %sPID%s: %s%d%s,\n", YELLOW, WHITE, GREEN, node->pid, WHITE); 
-    printf("  %sType%s: %s%s%s,\n", YELLOW, WHITE, GREEN, commandTypeToString(node->type), WHITE);
-    printf("  %sNext Operator%s: %s%s%s,\n", YELLOW, WHITE, GREEN, operatorTypeToString(node->nextOp), WHITE);
-    printf("  %sPipes%s: { read: %d, write: %d }\n", YELLOW, WHITE, node->pipes[0], node->pipes[1]);
-    printf("  %sRedirections%s: { input: %d, output: %d }\n", YELLOW, WHITE, node->redirections[0], node->redirections[1]);
-}
-
-/**
- * Function to print a list of commands
- * @param head The head of the list to print
-*/
-void printCommandList(Command* head) {
-    if (!head) {
-        printf("%sEMPTY%s\n", RED, WHITE);
-        return;
-    }
-    Command* temp = head;
-    while (temp) {
-        printf("%s{%s\n", PURPLE, WHITE);
-        printCommand(temp);
-        printf("%s}%s", PURPLE, WHITE);
-        temp = temp->next;
-        if (temp) printf(",\n"); // Separator between commands if there's another command in the list
-        else printf("\n");
+void printCommandList(const Command* head) {
+    printf("Command List:\n");
+    while (head != NULL) {
+        printf("%sCommand: %s\n", GREEN, head->command);
+        printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
+        printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : 
+            head->nextOp == OP_OR ? "||" : head->nextOp == OP_SEQ ? ";" : "|");
+        printf(" - Next command: %s\n", head->next != NULL ? head->next->command : "None");
+        printf(" - Previous command: %s\n", head->previous != NULL ? head->previous->command : "None");
+        printf(" - pid: %d\n", head->pid);
+        printf(" - Options:");
+        if (head->optionCount > 0) {
+            for (int i = 0; i < head->optionCount; i++) {
+                printf(" %s", head->options[i]);
+            }
+            printf("\n");
+        } else {
+            printf(" None\n");
+        }
+        if (head->redirections[0] != -1) {
+            printf(" - Input Redirection: %d\n", head->redirections[0]);
+        }
+        if (head->redirections[1] != -1) {
+            printf(" - Output Redirection: %d\n", head->redirections[1]);
+        }
+        if (head->pipes[0] != -1) {
+            printf(" - Pipe In: %d\n", head->pipes[0]);
+        }
+        if (head->pipes[1] != -1) {
+            printf(" - Pipe Out: %d\n", head->pipes[1]);
+        }
+        printf("%s\n", WHITE);
+        head = head->next;
     }
 }
+
+

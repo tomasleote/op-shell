@@ -8,6 +8,90 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+Command* currentCommandBeingParsed = NULL;
+
+//TODO: Check this, might not be working. 
+bool isValidSyntax() {
+    bool openQuote = false;
+    char quoteChar = '\0';
+    List *tmp = data->currentToken; // Use the global currentToken for iteration
+
+    while (tmp) {
+      char *token = tmp->t; // Correctly dereferencing to get the token
+      // Check for the presence of quotes in the token
+      for (int i = 0; token && token[i] != '\0'; i++) {
+        if (token[i] == '"' || token[i] == '\'') {
+          if (!openQuote) {
+          // Opening quote found
+            openQuote = true;
+            quoteChar = token[i];
+          } else if (quoteChar == token[i]) {
+            // Closing quote found
+            openQuote = false;
+            quoteChar = '\0'; // Reset quote character for next potential quote pair
+          }
+        }
+      }
+    tmp = tmp->next; // Move to the next token in the list
+    }
+
+    // If we've reached the end and a quote is still open, syntax is invalid
+    if (openQuote) {
+      printf("! Error: invalid syntax due to unclosed quote!\n");
+      return false;
+    }
+
+    // If additional syntax checks are needed, implement them here
+
+    return true;
+}
+
+
+
+/**
+ * Checks whether the input string \param s is an operator.
+ * @param s input string.
+ * @return a bool denoting whether the current string is an operator.
+ */
+bool isOperator(char *s) {
+  
+  char *operators[] = {
+      "&",
+      "&&",
+      "||",
+      ";",
+      "<",
+      ">",
+      "|",
+      NULL};
+
+  for (int i = 0; operators[i] != NULL; i++) {
+    if (strcmp(s, operators[i]) == 0) {
+      return true;
+    } 
+  }
+  
+  return false;
+}
+
+/**
+ * The function acceptToken checks whether the current token matches a target identifier,
+ * and goes to the next token if this is the case.
+ * @param lp List pointer to the start of the tokenlist.
+ * @param ident target identifier
+ * @return a bool denoting whether the current token matches the target identifier.
+ */
+bool acceptToken(char *ident) {
+  if (!data->currentToken)
+    return false;
+  if (strcmp(data->currentToken->t, ident) == 0) {
+    // Advance the global currentToken after matching
+    data->currentToken = data->currentToken->next;
+    return true;
+  }
+  return false;
+}
+
 /**
  * The function parseRedirections parses a command according to the grammar:
  *
@@ -28,7 +112,7 @@ bool parseCommand() {
 bool parseExecutable() {
 
   if (!isValidSyntax(data->currentToken)) {
-    data->currentToken = NULL;
+    printf("Error: invalid syntax!\n");
     return false;
   }
 
@@ -69,8 +153,12 @@ bool parseOptions() {
     currentCmd = currentCmd->next;
   }
 
+  // TODO: store each tmp->t as an option, if any exist
+  // TODO: Allocate memory for the array of strings DO NOT FORGET TO FREE LATER
+  //cu->options = (char **)malloc(sizeof(char *) * command->optionCount);
   while (data->currentToken != NULL && !isOperator(data->currentToken->t)) {
     addOptionToCommand(currentCmd, data->currentToken->t);
+    // Directly advance the global currentToken since we're reading each token as an option
     data->currentToken = data->currentToken->next;
   }
 
@@ -248,6 +336,8 @@ bool parseInputLineInternal() {
  */
 Command *parseInputLine() {
   currentCommandBeingParsed = NULL;
+
+  // Call the internal parsing function with the head pointer
   parseInputLineInternal();
   return (data->commandList);
 }
