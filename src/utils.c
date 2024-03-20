@@ -11,7 +11,10 @@
 #include <fcntl.h>
 
 
-// Helper function to build arguments array from command options, including the command itself
+/*
+* Helper function to build arguments array from command options, including the command itself
+* @return char** array of arguments
+*/
 char** buildArguments() {
     Command* cmd = data->currentCommand;
     char** args = malloc(sizeof(char*) * (cmd->optionCount + 2)); // +2 for the command and NULL terminator
@@ -27,6 +30,9 @@ char** buildArguments() {
     return args;
 }
 
+/**
+ * Function to open pipelines for the current command list
+*/
 void openPipelines() {
     if (!data->isPipeline) return; 
     
@@ -41,6 +47,9 @@ void openPipelines() {
     }
 }
 
+/**
+ * Function to close pipelines for the current command list
+*/
 void closePipelines() {
     if (!data->isPipeline) return; 
 
@@ -59,6 +68,9 @@ void closePipelines() {
     }
 }
 
+/**
+ * Function to close pipes for the current command only. 
+*/
 void closePipes() {
     Command* cmd = data->currentCommand;
     if (cmd->pipes[0] > 0) {
@@ -76,7 +88,6 @@ void closePipes() {
 */
 void redirectStds() {
     Command* cmd = data->currentCommand;
-    //printf("%sRedirecting standard input/output for command %s%s\n", RED, cmd->command, RESET);
 
     // Handle output redirection
     if (data->outputPath != NULL) {
@@ -111,7 +122,6 @@ void redirectStds() {
             exit(EXIT_FAILURE);
         }
         close(infile);
-        //printf("Redirecting input to %s from %s\n", cmd->command, data->inputPath);
     } else if (cmd->previous && data->isPipeline) {
         // Handle input from the previousious command in a pipeline
         if (dup2(cmd->previous->pipes[0], STDIN_FILENO) < 0) {
@@ -122,6 +132,9 @@ void redirectStds() {
     }
 }
 
+/*
+* Function to close file descriptors for the current command list
+*/
 void closeFds() {
     Command* cmd = data->commandList;
 
@@ -136,20 +149,13 @@ void closeFds() {
             cmd->redirections[1] = -1; 
         }
 
-        /* Close pipe file descriptors for the current command
-        if (cmd->pipes[0] > 0) {
-            close(cmd->pipes[0]);
-            cmd->pipes[0] = -1; 
-        }
-        if (cmd->pipes[1] > 0) {
-            close(cmd->pipes[1]);
-            cmd->pipes[1] = -1; 
-        }*/
-
         cmd = cmd->next; 
     }
 }
 
+/**
+ * Function to close file descriptors for the current command only. 
+*/
 void closeCurrentFds() {
     Command* cmd = data->currentCommand;
 
@@ -161,17 +167,11 @@ void closeCurrentFds() {
         close(cmd->redirections[1]);
         cmd->redirections[1] = -1; 
     }
-
-    /*if (cmd->pipes[0] > 0) {
-        close(cmd->pipes[0]);
-        cmd->pipes[0] = -1; 
-    }
-    if (cmd->pipes[1] > 0) {
-        close(cmd->pipes[1]);
-        cmd->pipes[1] = -1;
-    }*/
 }
 
+/*
+* Function to convert command type to string
+*/
 const char* commandTypeToString(CommandType type) {
     switch (type) {
         case CMD_EXTERNAL: return "External";
@@ -180,6 +180,9 @@ const char* commandTypeToString(CommandType type) {
     }
 }
 
+/**
+ * Function to convert operator type to string
+*/
 const char* operatorTypeToString(OperatorType op) {
     switch (op) {
         case OP_AND: return "AND";
@@ -191,12 +194,15 @@ const char* operatorTypeToString(OperatorType op) {
     }
 }
 
+/**
+ * Function that waits for all processes to finish
+*/
 void waitProcesses() {
     int status = -1;
     Command* cmd = data->commandList;
-    while (cmd->next != NULL) {
-        if (data->currentCommand && data->currentCommand->pid != -1) { 
-            waitpid(data->currentCommand->pid, &status, 0); 
+    while (cmd) {
+        if (cmd->pid != -1) { 
+            waitpid(cmd->pid, &status, 0); 
             if (WIFEXITED(status) && WTERMSIG(status) != SIGQUIT) {
                 data->lastExitStatus = WEXITSTATUS(status); 
             } else if (WTERMSIG(status) == SIGQUIT) {
@@ -210,6 +216,10 @@ void waitProcesses() {
     
 }
 
+/**
+ * Function to handle execvp error
+ * Closes pipelines and destroys the shell data
+*/
 void handleExecvpError() {
     Command* cmd = data->currentCommand;
     perror(cmd->command);
@@ -218,7 +228,140 @@ void handleExecvpError() {
     exit(127);
 }
 
+/**
+ * Function to update the last exit status
+ * @param status The status to update
+*/
 void updateLastExitStatus (int status) {
   data->lastExitStatus = status;
+}
+
+/**
+ * Function to check if a command exists in the PATH environment variable
+ * @param cmd The command to check
+ * @return a bool denoting whether the command exists
+*/
+bool commandExists(const char* cmd) {
+    if (cmd == NULL || strlen(cmd) == 0) {
+        return false;
+    }
+
+    char* pathEnv = getenv("PATH");
+    if (pathEnv == NULL) {
+        return false;
+    }
+
+    char* paths = strdup(pathEnv);
+    if (paths == NULL) {
+        return false; 
+    }
+
+    char* token = strtok(paths, ":");
+    while (token != NULL) {
+        char fullPath[PATH_MAX];
+        snprintf(fullPath, sizeof(fullPath), "%s/%s", token, cmd);
+        if (access(fullPath, X_OK) == 0) {
+            free(paths); 
+            return true; 
+        }
+        token = strtok(NULL, ":");
+    }
+
+    free(paths); 
+    return false; // Command not found
+}
+
+/**
+ * Function to check if the syntax of the command is valid
+ * @return a bool denoting whether the syntax is valid
+*/
+bool isValidSyntax() {
+    bool openQuote = false;
+    char quoteChar = '\0';
+    List *tmp = data->currentToken; 
+    bool firstToken = true; 
+
+    while (tmp) {
+        char *token = tmp->t; 
+        
+        if (firstToken) {
+            if (token == NULL || strlen(token) == 0) {
+                printf("Error: invalid syntax!\n");
+                return false;
+            }
+            
+            if (!commandExists(tmp->t)) {
+                printf("Error: command not found!\n");
+                return false;
+            }
+            
+            firstToken = false;
+        }
+
+        // Check for the presence of quotes in the token
+        for (int i = 0; token && token[i] != '\0'; i++) {
+            if (token[i] == '"' || token[i] == '\'') {
+                if (!openQuote) {
+                    openQuote = true;
+                    quoteChar = token[i];
+                } else if (quoteChar == token[i]) {
+                    openQuote = false;
+                    quoteChar = '\0'; 
+                }
+            }
+        }
+        tmp = tmp->next;
+    }
+
+    if (openQuote) {
+        printf("Error: invalid syntax!\n");
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Checks whether the input string \param s is an operator.
+ * @param s input string.
+ * @return a bool denoting whether the current string is an operator.
+ */
+bool isOperator(char *s) {
+  
+  char *operators[] = {
+      "&",
+      "&&",
+      "||",
+      ";",
+      "<",
+      ">",
+      "|",
+      NULL};
+
+  for (int i = 0; operators[i] != NULL; i++) {
+    if (strcmp(s, operators[i]) == 0) {
+      return true;
+    } 
+  }
+  
+  return false;
+}
+
+/**
+ * The function acceptToken checks whether the current token matches a target identifier,
+ * and goes to the next token if this is the case.
+ * @param lp List pointer to the start of the tokenlist.
+ * @param ident target identifier
+ * @return a bool denoting whether the current token matches the target identifier.
+ */
+bool acceptToken(char *ident) {
+  if (!data->currentToken)
+    return false;
+  if (strcmp(data->currentToken->t, ident) == 0) {
+    // Advance the global currentToken after matching
+    data->currentToken = data->currentToken->next;
+    return true;
+  }
+  return false;
 }
 

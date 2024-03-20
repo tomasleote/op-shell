@@ -3,11 +3,7 @@
 #include <stdbool.h>
 #include <unistd.h> 
 #include "shellComponents.h"
-#include "parsingTools.h"
-
-//double check status codes
-
-char *inputLine;
+#include "parsingTools.h" 
 
 /**
  * Main function of the shell.
@@ -19,10 +15,10 @@ char *inputLine;
 int main(int argc, char *argv[],  char **envp) {
     // Disable buffering on stdout
     setbuf(stdout, NULL);
-    int parsedSuccessfully = 1;
+    int parsedSuccessfully = 0;
 
     while (true) {
-        inputLine = readInputLine();
+        char *inputLine = readInputLine();
         
         if (inputLine == NULL) {
             free(inputLine);
@@ -30,12 +26,14 @@ int main(int argc, char *argv[],  char **envp) {
         }
 
         shellDataInit(inputLine);
+
+        if (data->commandList) {
+            parsedSuccessfully = 1;    
+        }
         
         if (parsedSuccessfully) {
             execute(envp);
-        } else {
-            printf("invalid syntax!\n");
-        }
+        } 
         
         free(inputLine);
         shellDataDestroy();

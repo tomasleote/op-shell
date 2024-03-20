@@ -5,6 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+/**
+ * Function to convert a command type to a string
+ * @param type The command type
+ * @return The string representation of the command type
+*/
 char* strdup(const char* s) {
     size_t len = strlen(s) + 1; // +1 for the null terminator
     char* newStr = malloc(len);
@@ -12,7 +17,12 @@ char* strdup(const char* s) {
     return memcpy(newStr, s, len);
 }
 
-// Function to create a new command
+/**
+ * Function to create a new command
+ * @param commandName The name of the command
+ * @return The new command
+ * @return NULL if the command could not be created
+ */
 Command* createCommand(char* commandName) {
     Command* newCommand = (Command*)malloc(sizeof(Command));
     if (newCommand == NULL) {
@@ -43,7 +53,11 @@ Command* createCommand(char* commandName) {
     return newCommand;
 }
 
-// Function to add an option to a command
+/*
+* Function to add an option to a command
+* @param command The command to add the option to
+* @param option The option to add
+*/
 void addOptionToCommand(Command* command, char* option) {
     command->options = realloc(command->options, sizeof(char*) * (command->optionCount + 1));
     if (command->options == NULL) {
@@ -54,7 +68,11 @@ void addOptionToCommand(Command* command, char* option) {
     command->optionCount++;
 }
 
-// Function to free a command and its associated resources
+/**
+ * Function to free a command and its associated resources  
+ * @param command The command to free
+ * @return NULL
+*/
 void freeCommand(Command* command) {
     if (command != NULL) {
         free(command->command);
@@ -66,7 +84,10 @@ void freeCommand(Command* command) {
     }
 }
 
-// Function to free a list of commands
+/*
+* Function to free a list of commands
+* @param head The head of the list to free
+*/
 void freeCommandList(Command* head) {
     while (head != NULL) {
         Command* next = head->next;
@@ -75,7 +96,11 @@ void freeCommandList(Command* head) {
     }
 }
 
-// Function to append a command to the end of a list
+/**
+ * Function to append a command to the end of a list
+ * @param head The head of the list
+ * @param newCommand The command to append
+*/
 void appendCommand(Command** head, Command* newCommand) {
     if (*head == NULL) {
         *head = newCommand;
@@ -89,6 +114,11 @@ void appendCommand(Command** head, Command* newCommand) {
     }
 }
 
+/**
+ * Function to change the operator of a command
+ * @param command The command to change the operator of
+ * @param newOp The new operator
+*/
 void changeOperator(Command* command, OperatorType newOp) {
     if (command != NULL) {
         command->nextOp = newOp;
@@ -97,7 +127,11 @@ void changeOperator(Command* command, OperatorType newOp) {
     }
 }
 
-// Function to delete a command from the list
+/*
+* Function to delete a command from the list
+* @param head The head of the list
+* @param command The command to delete
+*/
 void deleteCommand(Command** head, Command* command) {
     if (*head == NULL || command == NULL) return;
 
@@ -116,6 +150,10 @@ void deleteCommand(Command** head, Command* command) {
     freeCommand(command);
 }
 
+/**
+ * Function to print a command
+ * @param command The command to print
+*/
 void printCommand(Command* node) {
     if (!node) return;
 
@@ -140,7 +178,10 @@ void printCommand(Command* node) {
     printf("  %sRedirections%s: { input: %d, output: %d }\n", YELLOW, WHITE, node->redirections[0], node->redirections[1]);
 }
 
-
+/**
+ * Function to print a list of commands
+ * @param head The head of the list to print
+*/
 void printCommandList(Command* head) {
     if (!head) {
         printf("%sEMPTY%s\n", RED, WHITE);

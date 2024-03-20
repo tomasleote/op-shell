@@ -6,6 +6,11 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+#ifndef PATH_MAX
+#define PATH_MAX 4096
+#endif
+
+
 // From command.c
 typedef enum {
     CMD_EXTERNAL,
@@ -82,5 +87,9 @@ void waitProcesses();
 void updateLastExitStatus (int status);
 void handleExecvpError();  
 void closePipes(); 
+bool commandExists(const char* cmd); 
+bool isValidSyntax(); 
+bool acceptToken(char *ident);
+bool isOperator(char *s);
 
 #endif

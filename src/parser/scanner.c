@@ -11,12 +11,11 @@
  * @return a string containing the inputline.
  */
 char *readInputLine() {
-  // TODO: set string size dynamically
   int strLen = INITIAL_STRING_SIZE;
   int c = getchar();
 
   if (c == EOF && feof(stdin)) { // Check if EOF is the first character read
-    return NULL; // Signal EOF to the caller
+    return NULL; 
   }
 
   int i = 0;

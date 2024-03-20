@@ -49,8 +49,7 @@ void execute(char **envp) {
     }
   }
   waitProcesses();
-  closePipelines();
-  
+  closePipelines(); 
 }
 
 /**
@@ -71,13 +70,15 @@ void executeCommand(char **envp) {
     redirectStds();
     closeFds();
     closePipelines();
-    //printCommand(data->currentCommand);
     childExecution(); 
   } else if (pid > 0) {
     closeCurrentFds();
   }     
 }
 
+/**
+ * Executes the child process.
+*/
 void childExecution() {
     Command* cmd = data->currentCommand;
 
@@ -85,8 +86,6 @@ void childExecution() {
       executeBuiltIns(); 
     } else {
       char** args = buildArguments();
-      //closePipes();
-      //printf("Command: %s  args: %s\n", cmd->command, args[1]);
       if (execvp(cmd->command, args) == -1) {
         handleExecvpError();
       }

@@ -4,13 +4,21 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-shellData *data = NULL;
+shellData *data = NULL; // Global data
 
+/**
+ * Function to get the shell data
+ * @return The shell data
+*/
 shellData *getShellData() {
     return data;
 }
 
+/**
+ * Function to initialize the shell data and parse the token list and command list
+*/
 void shellDataInit(char *inputLine) {
 
     if (data == NULL) {
@@ -25,18 +33,25 @@ void shellDataInit(char *inputLine) {
         data->lastExitStatus = 1; 
     }
 
-    shellData *data = getShellData();
+    if (inputLine == NULL || strlen(inputLine) == 0) {
+        printf("Error: invalid syntax!\n");
+        return;
+    }
+
     data->tokenList = getTokenList(inputLine);
     data->currentToken = data->tokenList;
     data->commandList = parseInputLine(data->tokenList);
-    //printData();
 }
 
+/**
+ * Function to destroy the shell data
+ * Frees the token list, command list, input path, output path and the shell data
+*/
 void shellDataDestroy() {
     if (data == NULL) {
         return;
     }
-    // echo hello ; echo world -> frees 2 times token list for some reason
+
     freeTokenList(data->tokenList);
     freeCommandList(data->commandList);
     free(data->inputPath);
@@ -45,11 +60,15 @@ void shellDataDestroy() {
     data = NULL;
 }
 
+/**
+ * Debuging function to print all data
+ * Prints the token list, command list, current command, current token, input path, output path and isPipeline
+*/
 void printData() {
-    //printList(data->tokenList);
+    printList(data->tokenList);
     printCommandList(data->commandList);
-    //printf("Current Command: %s\n", data->currentCommand->command);
-    //printf("Current Token: %s\n", data->currentToken->t);
+    printf("Current Command: %s\n", data->currentCommand->command);
+    printf("Current Token: %s\n", data->currentToken->t);
     printf("Input Path: %s\n", data->inputPath != NULL ? data->inputPath : "NULL");
     printf("Output Path: %s\n", data->outputPath != NULL ? data->outputPath : "NULL");
     printf("Is Pipeline: %d\n", data->isPipeline);
