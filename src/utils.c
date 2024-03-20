@@ -23,37 +23,37 @@ char** buildArguments() {
     for (int i = 0; i < cmd->optionCount; i++) {
         args[i + 1] = cmd->options[i];
     }
-    args[cmd->optionCount + 1] = NULL; // NULL-terminate the array
+    args[cmd->optionCount + 1] = NULL; 
     return args;
 }
 
 void openPipelines() {
-    if (!data->isPipeline) return; // Only proceed if we're handling a pipeline
+    if (!data->isPipeline) return; 
     
     Command *tmp = data->commandList;
 
     while (tmp && tmp->next) {
         if (pipe(tmp->pipes) == -1) {
             perror("pipe");
-            exit(EXIT_FAILURE); // Consider exiting or handling error more gracefully
+            exit(EXIT_FAILURE); 
         }
         tmp = tmp->next;
     }
 }
 
 void closePipelines() {
-    if (!data->isPipeline) return; // Only proceed if we're handling a pipeline
+    if (!data->isPipeline) return; 
 
     Command *tmp = data->commandList;
 
     while (tmp) {
         if (tmp->pipes[0] != -1) {
             close(tmp->pipes[0]);
-            tmp->pipes[0] = -1; // Reset the file descriptor to indicate it's closed
+            tmp->pipes[0] = -1; 
         }
         if (tmp->pipes[1] != -1) {
             close(tmp->pipes[1]);
-            tmp->pipes[1] = -1; // Reset the file descriptor to indicate it's closed
+            tmp->pipes[1] = -1; 
         }
         tmp = tmp->next;
     }
@@ -61,7 +61,6 @@ void closePipelines() {
 
 void redirectStds() {
     Command* cmd = data->currentCommand;
-
     // Handle input redirection
     if (data->inputPath != NULL) {
         int infile = open(data->inputPath, O_RDONLY);
@@ -110,48 +109,64 @@ void closeFds() {
         // Close redirection file descriptors if they were used
         if (cmd->redirections[0] > 0) {
             close(cmd->redirections[0]);
-            cmd->redirections[0] = -1; // Mark as closed
+            cmd->redirections[0] = -1; 
         }
         if (cmd->redirections[1] > 0) {
             close(cmd->redirections[1]);
-            cmd->redirections[1] = -1; // Mark as closed
+            cmd->redirections[1] = -1; 
         }
 
         // Close pipe file descriptors for the current command
         if (cmd->pipes[0] > 0) {
             close(cmd->pipes[0]);
-            cmd->pipes[0] = -1; // Mark as closed
+            cmd->pipes[0] = -1; 
         }
         if (cmd->pipes[1] > 0) {
             close(cmd->pipes[1]);
-            cmd->pipes[1] = -1; // Mark as closed
+            cmd->pipes[1] = -1; 
         }
 
-        cmd = cmd->next; // Move to the next command in the list
+        cmd = cmd->next; 
     }
 }
 
 void closeCurrentFds() {
     Command* cmd = data->currentCommand;
 
-    // Assuming redirections[0] is for input and redirections[1] is for output
     if (cmd->redirections[0] > 0) {
         close(cmd->redirections[0]);
-        cmd->redirections[0] = -1; // Mark as closed
+        cmd->redirections[0] = -1;
     }
     if (cmd->redirections[1] > 0) {
         close(cmd->redirections[1]);
-        cmd->redirections[1] = -1; // Mark as closed
+        cmd->redirections[1] = -1; 
     }
 
-    // Close pipe file descriptors for the current command
     if (cmd->pipes[0] > 0) {
         close(cmd->pipes[0]);
-        cmd->pipes[0] = -1; // Mark as closed
+        cmd->pipes[0] = -1; 
     }
     if (cmd->pipes[1] > 0) {
         close(cmd->pipes[1]);
-        cmd->pipes[1] = -1; // Mark as closed
+        cmd->pipes[1] = -1;
     }
 }
 
+const char* commandTypeToString(CommandType type) {
+    switch (type) {
+        case CMD_EXTERNAL: return "External";
+        case CMD_BUILTIN: return "Built-in";
+        default: return "Unknown";
+    }
+}
+
+const char* operatorTypeToString(OperatorType op) {
+    switch (op) {
+        case OP_AND: return "AND";
+        case OP_OR: return "OR";
+        case OP_SEQ: return "Sequence";
+        case OP_PIPE: return "Pipe";
+        case OP_NONE: return "None";
+        default: return "Unknown";
+    }
+}

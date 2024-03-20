@@ -44,7 +44,8 @@ void freeCommand(Command* command);
 void freeCommandList(Command* head);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
-void printCommandList(const Command* head); 
+void printCommandList(Command* head); 
+void printCommand(Command* command);
 char* strdup(const char* s);
 void changeOperator(Command* command, OperatorType newOp);
 
@@ -76,7 +77,7 @@ void closeCurrentFds();
 void closeFds();
 char** buildArguments();
 void redirectStds(); 
-
-
+const char* commandTypeToString(CommandType type);
+const char* operatorTypeToString(OperatorType op);
 
 #endif

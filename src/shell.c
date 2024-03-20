@@ -43,7 +43,7 @@ void execute(char **envp) {
       case OP_SEQ: // ; and \n (handled the same way)
       case OP_PIPE: // |
       case OP_NONE: // No operator, or end of a command sequence
-        shouldExecuteNext = true; // Always execute the next command
+        shouldExecuteNext = true;
         break;
     }
 
@@ -68,20 +68,23 @@ void executeCommand(char **envp) {
   pid_t pid = fork();
   data->currentCommand->pid = pid;
   
+  printf("PID: %d\n", pid);
+  
   if (pid == -1) {
     perror("fork");
     return;
   } else if (pid == 0) {
     signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
-    //addCommandToOptions();
     redirectStds();
     closeFds();
+    printf("Executing command: ");
+    printCommand(data->currentCommand);
     childExecution(); 
   } else if (pid > 0) {
     int status;
     waitpid(pid, &status, 0); // Wait for the command to complete
-    updateLastExitStatus(WEXITSTATUS(status));
     closeCurrentFds();
+    updateLastExitStatus(WEXITSTATUS(status));
   }     
 }
 
@@ -89,16 +92,12 @@ void childExecution() {
     Command* cmd = data->currentCommand;
 
     if (cmd->type == CMD_BUILTIN) {
-        // Execute the built-in command. This assumes you have a function to handle built-in commands directly.
-        executeBuiltIns(); // Note: This function should now be adapted to work without arguments, using the global `data`.
+      executeBuiltIns(); 
     } else {
-        // For external commands, build the arguments list including the command itself
-        char** args = buildArguments();
-
-        // Execute the command with arguments
-        if (execvp(cmd->command, args) == -1) {
-            perror("execvp failed");
-            exit(EXIT_FAILURE);
-        }
+      char** args = buildArguments();
+      if (execvp(cmd->command, args) == -1) {
+        perror("execvp failed");
+        exit(EXIT_FAILURE);
+      }
     }
 }

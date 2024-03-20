@@ -116,40 +116,32 @@ void deleteCommand(Command** head, Command* command) {
     freeCommand(command);
 }
 
-void printCommandList(const Command* head) {
-    printf("Command List:\n");
-    while (head != NULL) {
-        printf("%sCommand: %s\n", GREEN, head->command);
-        printf(" - Type: %s\n", head->type == CMD_BUILTIN ? "Built-in" : "External");
-        printf(" - Next Operator: %s\n", head->nextOp == OP_NONE ? "None" : head->nextOp == OP_AND ? "&&" : 
-            head->nextOp == OP_OR ? "||" : head->nextOp == OP_SEQ ? ";" : "|");
-        printf(" - Next command: %s\n", head->next != NULL ? head->next->command : "None");
-        printf(" - Previous command: %s\n", head->previous != NULL ? head->previous->command : "None");
-        printf(" - pid: %d\n", head->pid);
-        printf(" - Options:");
-        if (head->optionCount > 0) {
-            for (int i = 0; i < head->optionCount; i++) {
-                printf(" %s", head->options[i]);
-            }
-            printf("\n");
-        } else {
-            printf(" None\n");
-        }
-        if (head->redirections[0] != -1) {
-            printf(" - Input Redirection: %d\n", head->redirections[0]);
-        }
-        if (head->redirections[1] != -1) {
-            printf(" - Output Redirection: %d\n", head->redirections[1]);
-        }
-        if (head->pipes[0] != -1) {
-            printf(" - Pipe In: %d\n", head->pipes[0]);
-        }
-        if (head->pipes[1] != -1) {
-            printf(" - Pipe Out: %d\n", head->pipes[1]);
-        }
-        printf("%s\n", WHITE);
-        head = head->next;
-    }
+void printCommand(Command* node) {
+    if (!node) return;
+
+    printf("  %sCommand%s: %s%s%s,\n", YELLOW, WHITE, GREEN, node->command, WHITE);
+    printf("  %sPID%s: %s%d%s,\n", YELLOW, WHITE, GREEN, node->pid, WHITE);
+    printf("  %sCurrent%s: %s%p%s,\n", YELLOW, WHITE, BLUE, (void*)node->command, WHITE);
+    printf("  %sPrevious%s: %s%p%s,\n", YELLOW, WHITE, PURPLE, (void*)node->previous->command, WHITE);
+    printf("  %sNext%s: %s%p%s,\n", YELLOW, WHITE, PURPLE, (void*)node->next->command, WHITE);
+    printf("  %sType%s: %s%s%s,\n", YELLOW, WHITE, GREEN, commandTypeToString(node->type), WHITE);
+    printf("  %sNext Operator%s: %s%s%s,\n", YELLOW, WHITE, GREEN, operatorTypeToString(node->nextOp), WHITE);
+    printf("  %sPipes%s: { read: %d, write: %d }\n", YELLOW, WHITE, node->pipes[0], node->pipes[1]);
+    printf("  %sRedirections%s: { input: %d, output: %d }\n", YELLOW, WHITE, node->redirections[0], node->redirections[1]);
 }
 
-
+void printCommandList(Command* head) {
+    if (!head) {
+        printf("%sEMPTY%s\n", RED, WHITE);
+        return;
+    }
+    Command* temp = head;
+    while (temp) {
+        printf("%s{%s\n", PURPLE, WHITE);
+        printCommand(temp);
+        printf("%s}%s", PURPLE, WHITE);
+        temp = temp->next;
+        if (temp) printf(",\n"); // Separator between commands if there's another command in the list
+        else printf("\n");
+    }
+}
