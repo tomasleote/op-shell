@@ -22,6 +22,7 @@ void shellDataInit(char *inputLine) {
         data->inputPath = NULL;
         data->outputPath = NULL;
         data->isPipeline = false;	
+        data->lastExitStatus = 1; 
     }
 
     shellData *data = getShellData();
@@ -35,6 +36,7 @@ void shellDataDestroy() {
     if (data == NULL) {
         return;
     }
+    // echo hello ; echo world -> frees 2 times token list for some reason
     freeTokenList(data->tokenList);
     freeCommandList(data->commandList);
     free(data->inputPath);

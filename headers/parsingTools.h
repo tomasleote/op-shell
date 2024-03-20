@@ -82,6 +82,7 @@ typedef struct shellData {
     char* inputPath;
     char* outputPath;
     bool isPipeline; 
+    int lastExitStatus; 
 } shellData;
 
 // In data.c

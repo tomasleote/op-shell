@@ -67,7 +67,6 @@ BuiltInCommand getBuiltInCommand(const char *command);
 // Function prototypes from shell.c
 void execute(char **envp);
 void executeCommand(char **envp);
-void updateLastExitStatus (int status);
 void childExecution();
 
 // Function prototypes from utils.c
@@ -79,5 +78,9 @@ char** buildArguments();
 void redirectStds(); 
 const char* commandTypeToString(CommandType type);
 const char* operatorTypeToString(OperatorType op);
+void waitProcesses();
+void updateLastExitStatus (int status);
+void handleExecvpError();  
+void closePipes(); 
 
 #endif

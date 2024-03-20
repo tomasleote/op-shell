@@ -5,6 +5,8 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
+//double check status codes
+
 char *inputLine;
 
 /**

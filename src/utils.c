@@ -59,27 +59,24 @@ void closePipelines() {
     }
 }
 
+void closePipes() {
+    Command* cmd = data->currentCommand;
+    if (cmd->pipes[0] > 0) {
+        close(cmd->pipes[0]);
+        cmd->pipes[0] = -1; 
+    }
+    if (cmd->pipes[1] > 0) {
+        close(cmd->pipes[1]);
+        cmd->pipes[1] = -1; 
+    }
+}
+
+/**
+ * Redirects standard input/output for the current command.
+*/
 void redirectStds() {
     Command* cmd = data->currentCommand;
-    // Handle input redirection
-    if (data->inputPath != NULL) {
-        int infile = open(data->inputPath, O_RDONLY);
-        if (infile < 0) {
-            perror("open input file");
-            exit(EXIT_FAILURE);
-        }
-        if (dup2(infile, STDIN_FILENO) < 0) {
-            perror("dup2 input file");
-            exit(EXIT_FAILURE);
-        }
-        close(infile);
-    } else if (cmd->previous && cmd->previous->pipes[0] != -1 && data->isPipeline) {
-        // Handle input from the previousious command in a pipeline
-        if (dup2(cmd->previous->pipes[0], STDIN_FILENO) < 0) {
-            perror("dup2 previousious pipe");
-            exit(EXIT_FAILURE);
-        }
-    }
+    //printf("%sRedirecting standard input/output for command %s%s\n", RED, cmd->command, RESET);
 
     // Handle output redirection
     if (data->outputPath != NULL) {
@@ -93,17 +90,40 @@ void redirectStds() {
             exit(EXIT_FAILURE);
         }
         close(outfile);
-    } else if (cmd->pipes[1] != -1 && data->isPipeline) {
+    } else if ( cmd->next && data->isPipeline) {
         // Handle output to the next command in a pipeline
         if (dup2(cmd->pipes[1], STDOUT_FILENO) < 0) {
             perror("dup2 to pipe");
             exit(EXIT_FAILURE);
         }
+        close(cmd->pipes[1]);
+    }
+
+    // Handle input redirection
+    if (data->inputPath != NULL) {
+        int infile = open(data->inputPath, O_RDONLY);
+        if (infile < 0) {
+            perror("open input file");
+            exit(EXIT_FAILURE);
+        }
+        if (dup2(infile, STDIN_FILENO) < 0) {
+            perror("dup2 input file");
+            exit(EXIT_FAILURE);
+        }
+        close(infile);
+        //printf("Redirecting input to %s from %s\n", cmd->command, data->inputPath);
+    } else if (cmd->previous && data->isPipeline) {
+        // Handle input from the previousious command in a pipeline
+        if (dup2(cmd->previous->pipes[0], STDIN_FILENO) < 0) {
+            perror("dup2 previousious pipe");
+            exit(EXIT_FAILURE);
+        }
+        close(cmd->previous->pipes[0]);
     }
 }
 
 void closeFds() {
-    Command* cmd = data->currentCommand;
+    Command* cmd = data->commandList;
 
     while (cmd) {
         // Close redirection file descriptors if they were used
@@ -116,7 +136,7 @@ void closeFds() {
             cmd->redirections[1] = -1; 
         }
 
-        // Close pipe file descriptors for the current command
+        /* Close pipe file descriptors for the current command
         if (cmd->pipes[0] > 0) {
             close(cmd->pipes[0]);
             cmd->pipes[0] = -1; 
@@ -124,7 +144,7 @@ void closeFds() {
         if (cmd->pipes[1] > 0) {
             close(cmd->pipes[1]);
             cmd->pipes[1] = -1; 
-        }
+        }*/
 
         cmd = cmd->next; 
     }
@@ -142,14 +162,14 @@ void closeCurrentFds() {
         cmd->redirections[1] = -1; 
     }
 
-    if (cmd->pipes[0] > 0) {
+    /*if (cmd->pipes[0] > 0) {
         close(cmd->pipes[0]);
         cmd->pipes[0] = -1; 
     }
     if (cmd->pipes[1] > 0) {
         close(cmd->pipes[1]);
         cmd->pipes[1] = -1;
-    }
+    }*/
 }
 
 const char* commandTypeToString(CommandType type) {
@@ -170,3 +190,35 @@ const char* operatorTypeToString(OperatorType op) {
         default: return "Unknown";
     }
 }
+
+void waitProcesses() {
+    int status = -1;
+    Command* cmd = data->commandList;
+    while (cmd->next != NULL) {
+        if (data->currentCommand && data->currentCommand->pid != -1) { 
+            waitpid(data->currentCommand->pid, &status, 0); 
+            if (WIFEXITED(status) && WTERMSIG(status) != SIGQUIT) {
+                data->lastExitStatus = WEXITSTATUS(status); 
+            } else if (WTERMSIG(status) == SIGQUIT) {
+                write(1, "Quit (core dumped)\n", 19);
+                data->lastExitStatus = 131; // Specific exit code for SIGQUIT if the process was terminated by SIGQUIT
+            }
+        }
+        cmd = cmd->next;
+    }
+    
+    
+}
+
+void handleExecvpError() {
+    Command* cmd = data->currentCommand;
+    perror(cmd->command);
+    closePipelines();
+    shellDataDestroy();
+    exit(127);
+}
+
+void updateLastExitStatus (int status) {
+  data->lastExitStatus = status;
+}
+

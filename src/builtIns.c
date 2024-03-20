@@ -6,7 +6,6 @@
 #include <unistd.h>
 #define PATH_MAX 4096
 
-extern int lastExitStatus;
 static char lastDirectory[PATH_MAX] = "";
 
 BuiltInCommand getBuiltInCommand(const char *command) {
@@ -22,7 +21,7 @@ void exitShell() {
 }
 
 void statusShell() {
-    printf("The most recent exit code is: %d\n", lastExitStatus);
+    printf("The most recent exit code is: %d\n", data->lastExitStatus);
 }
 
 void executeBuiltIns() {

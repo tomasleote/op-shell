@@ -7,12 +7,6 @@
 #include "shellComponents.h"
 #include "parsingTools.h"
 
-int lastExitStatus = 0;
-
-void updateLastExitStatus (int status) {
-  lastExitStatus = status;
-}
-
 /**
  * Executes the linked list.
  * @param head pointer to current element to execute.
@@ -35,10 +29,10 @@ void execute(char **envp) {
 
     switch (data->currentCommand->nextOp) {
       case OP_AND: // &&
-        shouldExecuteNext = (lastExitStatus == 0);
+        shouldExecuteNext = (data->lastExitStatus == 0);
         break;
       case OP_OR: // ||
-        shouldExecuteNext = (lastExitStatus != 0);
+        shouldExecuteNext = (data->lastExitStatus != 0);
         break;
       case OP_SEQ: // ; and \n (handled the same way)
       case OP_PIPE: // |
@@ -54,8 +48,9 @@ void execute(char **envp) {
       data->currentCommand = data->currentCommand->next;
     }
   }
-
+  waitProcesses();
   closePipelines();
+  
 }
 
 /**
@@ -68,23 +63,18 @@ void executeCommand(char **envp) {
   pid_t pid = fork();
   data->currentCommand->pid = pid;
   
-  printf("PID: %d\n", pid);
-  
   if (pid == -1) {
     perror("fork");
     return;
   } else if (pid == 0) {
-    signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
+    //signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
     redirectStds();
     closeFds();
-    printf("Executing command: ");
-    printCommand(data->currentCommand);
+    closePipelines();
+    //printCommand(data->currentCommand);
     childExecution(); 
   } else if (pid > 0) {
-    int status;
-    waitpid(pid, &status, 0); // Wait for the command to complete
     closeCurrentFds();
-    updateLastExitStatus(WEXITSTATUS(status));
   }     
 }
 
@@ -95,9 +85,10 @@ void childExecution() {
       executeBuiltIns(); 
     } else {
       char** args = buildArguments();
+      //closePipes();
+      //printf("Command: %s  args: %s\n", cmd->command, args[1]);
       if (execvp(cmd->command, args) == -1) {
-        perror("execvp failed");
-        exit(EXIT_FAILURE);
+        handleExecvpError();
       }
     }
 }
