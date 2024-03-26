@@ -22,6 +22,7 @@ void shellDataInit(char *inputLine) {
         data->inputPath = NULL;
         data->outputPath = NULL;
         data->isPipeline = false;	
+        data->lastExitStatus = 0;
     }
 
     shellData *data = getShellData();

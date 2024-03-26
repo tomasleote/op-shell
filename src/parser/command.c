@@ -97,6 +97,21 @@ void changeOperator(Command* command, OperatorType newOp) {
     }
 }
 
+void deleteCommandsUpToCurrent() {
+    Command* cmd = data->commandList;
+    Command* nextCmd = NULL;
+    Command* target = data->currentCommand->next; 
+    
+    // Delete commands up to and including the current command
+    while (cmd && cmd->next && cmd != target) { // invalid read
+        nextCmd = cmd->next;
+        deleteCommand(&data->commandList, cmd);
+        cmd = nextCmd;
+    }
+    data->currentCommand = data->commandList;
+}
+
+
 // Function to delete a command from the list
 void deleteCommand(Command** head, Command* command) {
     if (*head == NULL || command == NULL) return;
@@ -114,6 +129,38 @@ void deleteCommand(Command** head, Command* command) {
     }
 
     freeCommand(command);
+}
+
+void printCommand(Command* command) {
+    printf("%sCommand: %s\n", GREEN, command->command);
+    printf(" - Type: %s\n", command->type == CMD_BUILTIN ? "Built-in" : "External");
+    printf(" - Next Operator: %s\n", command->nextOp == OP_NONE ? "None" : command->nextOp == OP_AND ? "&&" : 
+        command->nextOp == OP_OR ? "||" : command->nextOp == OP_SEQ ? ";" : "|");
+    printf(" - Next command: %s\n", command->next != NULL ? command->next->command : "None");
+    printf(" - Previous command: %s\n", command->previous != NULL ? command->previous->command : "None");
+    printf(" - pid: %d\n", command->pid);
+    printf(" - Options:");
+    if (command->optionCount > 0) {
+        for (int i = 0; i < command->optionCount; i++) {
+            printf(" %s", command->options[i]);
+        }
+        printf("\n");
+    } else {
+        printf(" None\n");
+    }
+    if (command->redirections[0] != -1) {
+        printf(" - Input Redirection: %d\n", command->redirections[0]);
+    }
+    if (command->redirections[1] != -1) {
+        printf(" - Output Redirection: %d\n", command->redirections[1]);
+    }
+    if (command->pipes[0] != -1) {
+        printf(" - Pipe In: %d\n", command->pipes[0]);
+    }
+    if (command->pipes[1] != -1) {
+        printf(" - Pipe Out: %d\n", command->pipes[1]);
+    }
+    printf("%s\n", WHITE);
 }
 
 void printCommandList(const Command* head) {

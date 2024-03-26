@@ -31,7 +31,7 @@ void openPipelines() {
     if (!data->isPipeline) return; // Only proceed if we're handling a pipeline
     
     Command *tmp = data->commandList;
-
+    if (tmp->pipes[0] != -1 && tmp->pipes[1] != -1) return; // If the pipeline is already open, return
     while (tmp && tmp->next) {
         if (pipe(tmp->pipes) == -1) {
             perror("pipe");
@@ -46,7 +46,7 @@ void closePipelines() {
 
     Command *tmp = data->commandList;
 
-    while (tmp) {
+    while (tmp->next) {
         if (tmp->pipes[0] != -1) {
             close(tmp->pipes[0]);
             tmp->pipes[0] = -1; // Reset the file descriptor to indicate it's closed
@@ -61,7 +61,6 @@ void closePipelines() {
 
 void redirectStds() {
     Command* cmd = data->currentCommand;
-
     // Handle input redirection
     if (data->inputPath != NULL) {
         int infile = open(data->inputPath, O_RDONLY);
@@ -80,6 +79,7 @@ void redirectStds() {
             perror("dup2 previousious pipe");
             exit(EXIT_FAILURE);
         }
+        close(cmd->previous->pipes[0]);
     }
 
     // Handle output redirection
@@ -94,17 +94,18 @@ void redirectStds() {
             exit(EXIT_FAILURE);
         }
         close(outfile);
-    } else if (cmd->pipes[1] != -1 && data->isPipeline) {
+    } else if (cmd->next && data->isPipeline) {
         // Handle output to the next command in a pipeline
         if (dup2(cmd->pipes[1], STDOUT_FILENO) < 0) {
             perror("dup2 to pipe");
             exit(EXIT_FAILURE);
         }
+        close(cmd->pipes[1]);
     }
 }
 
 void closeFds() {
-    Command* cmd = data->currentCommand;
+    Command* cmd = data->commandList;
 
     while (cmd) {
         // Close redirection file descriptors if they were used
@@ -117,7 +118,7 @@ void closeFds() {
             cmd->redirections[1] = -1; // Mark as closed
         }
 
-        // Close pipe file descriptors for the current command
+        /*Close pipe file descriptors for the current command
         if (cmd->pipes[0] > 0) {
             close(cmd->pipes[0]);
             cmd->pipes[0] = -1; // Mark as closed
@@ -125,33 +126,33 @@ void closeFds() {
         if (cmd->pipes[1] > 0) {
             close(cmd->pipes[1]);
             cmd->pipes[1] = -1; // Mark as closed
-        }
+        }*/
 
         cmd = cmd->next; // Move to the next command in the list
     }
 }
-
 void closeCurrentFds() {
     Command* cmd = data->currentCommand;
 
-    // Assuming redirections[0] is for input and redirections[1] is for output
+    // Close the write end of the current command's pipe if it's not the last command in the pipeline
+    if (cmd->next && cmd->pipes[1] > 0) {
+        close(cmd->pipes[1]);
+        cmd->pipes[1] = -1;
+    }
+
+    // Close the read end of the previous command's pipe if the current command is not the first in the pipeline
+    if (cmd->previous && cmd->previous->pipes[0] > 0) {
+        close(cmd->previous->pipes[0]);
+        cmd->previous->pipes[0] = -1;
+    }
+
+    // Close the input redirection file descriptor if it was used
     if (cmd->redirections[0] > 0) {
         close(cmd->redirections[0]);
-        cmd->redirections[0] = -1; // Mark as closed
+        cmd->redirections[0] = -1;
     }
     if (cmd->redirections[1] > 0) {
         close(cmd->redirections[1]);
-        cmd->redirections[1] = -1; // Mark as closed
-    }
-
-    // Close pipe file descriptors for the current command
-    if (cmd->pipes[0] > 0) {
-        close(cmd->pipes[0]);
-        cmd->pipes[0] = -1; // Mark as closed
-    }
-    if (cmd->pipes[1] > 0) {
-        close(cmd->pipes[1]);
-        cmd->pipes[1] = -1; // Mark as closed
+        cmd->redirections[1] = -1;
     }
 }
-

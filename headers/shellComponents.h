@@ -45,8 +45,10 @@ void freeCommandList(Command* head);
 void appendCommand(Command** head, Command* newCommand);
 void deleteCommand(Command** head, Command* command);
 void printCommandList(const Command* head); 
+void printCommand(Command* command); 
 char* strdup(const char* s);
 void changeOperator(Command* command, OperatorType newOp);
+void deleteCommandsUpToCurrent(); 
 
 // From builtIns.c
 typedef enum {
@@ -68,6 +70,7 @@ void execute(char **envp);
 void executeCommand(char **envp);
 void updateLastExitStatus (int status);
 void childExecution();
+void waitProcesses();
 
 // Function prototypes from utils.c
 void openPipelines();

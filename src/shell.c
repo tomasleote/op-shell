@@ -40,21 +40,26 @@ void execute(char **envp) {
       case OP_OR: // ||
         shouldExecuteNext = (lastExitStatus != 0);
         break;
-      case OP_SEQ: // ; and \n (handled the same way)
+      case OP_SEQ: 
+        //TODO: Fix this, should work like /n. remove all the commands before this
+        waitProcesses();
+        closePipelines(); 
+        deleteCommandsUpToCurrent();
+        continue; 
       case OP_PIPE: // |
+        shouldExecuteNext = true;
       case OP_NONE: // No operator, or end of a command sequence
-        shouldExecuteNext = true; // Always execute the next command
-        break;
+        data->currentCommand = data->currentCommand->next;
+        continue;
     }
 
-    // Decision to skip the next command or continue
     if (!shouldExecuteNext && data->currentCommand->next != NULL) {
       data->currentCommand = data->currentCommand->next->next;
     } else {
       data->currentCommand = data->currentCommand->next;
     }
   }
-
+  waitProcesses();
   closePipelines();
 }
 
@@ -65,28 +70,30 @@ void execute(char **envp) {
 */
 void executeCommand(char **envp) {
   
-  pid_t pid = fork();
-  data->currentCommand->pid = pid;
+  data->currentCommand->pid = fork();
   
-  if (pid == -1) {
+  if (data->currentCommand->pid  == -1) {
     perror("fork");
     return;
-  } else if (pid == 0) {
-    signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this? 
-    //addCommandToOptions();
-    redirectStds();
-    closeFds();
+  } else if (data->currentCommand->pid  == 0) {
+    signal(SIGQUIT, SIG_DFL); // Reset signal handler to default, do I need this?
+    redirectStds();     
+    //printf("Finished redirectStds(); Executing command: %s\n", data->currentCommand->command);
+    //closeFds();
+    //printf("Finished closeFds(); Executing command: %s\n", data->currentCommand->command);
+    closePipelines();
+    //printf("Finished closePipelines(); Executing command: %s\n", data->currentCommand->command);
     childExecution(); 
-  } else if (pid > 0) {
-    int status;
-    waitpid(pid, &status, 0); // Wait for the command to complete
-    updateLastExitStatus(WEXITSTATUS(status));
+    //printf("Finished childExecution(); Executing command: %s\n", data->currentCommand->command);
+  } else {
     closeCurrentFds();
   }     
 }
 
 void childExecution() {
     Command* cmd = data->currentCommand;
+    //printf("Executing child\n");
+    //printCommand(cmd);
 
     if (cmd->type == CMD_BUILTIN) {
         // Execute the built-in command. This assumes you have a function to handle built-in commands directly.
@@ -94,11 +101,23 @@ void childExecution() {
     } else {
         // For external commands, build the arguments list including the command itself
         char** args = buildArguments();
-
         // Execute the command with arguments
         if (execvp(cmd->command, args) == -1) {
             perror("execvp failed");
             exit(EXIT_FAILURE);
         }
+    }
+}
+
+void waitProcesses() {
+    int status;
+    Command* tmp = data->commandList;
+
+    while (tmp) {
+        if (tmp->pid >= 0) { 
+          waitpid(tmp->pid, &status, 0); 
+          updateLastExitStatus(WEXITSTATUS(status)); 
+        }
+        tmp = tmp->next;
     }
 }
