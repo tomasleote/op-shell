@@ -39,7 +39,6 @@ bool parseExecutable() {
   char* executableName = data->currentToken->t;
   Command* newCmd = createCommand(executableName);
   newCmd->type = CMD_EXECUTABLE;
-  currentCommandBeingParsed = newCmd;
   data->currentCommand = newCmd;
 
   if (newCmd == NULL) return false;
@@ -136,7 +135,6 @@ bool parseBuiltIn() {
     if (acceptToken(builtIns[i])) {
       Command* newCmd = createCommand(builtIns[i]);
       newCmd->type = CMD_BUILTIN; // Set as built-in command
-      currentCommandBeingParsed = newCmd;
       data->currentCommand = newCmd;
       appendCommand(&(data->commandList), newCmd);
       return true;
@@ -247,7 +245,6 @@ bool parseInputLineInternal() {
  * @return a bool denoting whether the inputline was parsed successfully.
  */
 Command *parseInputLine() {
-  currentCommandBeingParsed = NULL;
   parseInputLineInternal();
   return (data->commandList);
 }
