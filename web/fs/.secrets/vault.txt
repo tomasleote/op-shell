@@ -1,0 +1,16 @@
+   ___   ___   ___
+  | o | | p | | ! |   vault open
+   ---   ---   ---
+
+You reached the end of the hunt. To open this folder you had to know that:
+  - a name starting with "." stays hidden from "ls",
+  - the files and folders are still there, you just need the path,
+  - "cat" reads any file as long as you give it the right path.
+
+That is exactly the kind of curiosity this shell was built to reward.
+
+If you are a recruiter and you made it here: thanks for exploring. The
+path you just took (reading code, following clues, working out how the
+tools behave under the hood) is how I like to work.
+
+Get in touch: "cat contacts.txt"

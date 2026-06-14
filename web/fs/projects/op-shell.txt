@@ -1,0 +1,47 @@
+op-shell
+========
+A shell in C, from the Operating Systems course.
+(This is the project you are using right now.)
+
+
+Summary
+-------
+A command-line interpreter written from scratch in C99. It reads a line,
+splits it into tokens, builds the command structure and executes it. It
+has two execution modes from the same source code:
+
+  - Native: uses fork() to create a child process and execvp() to replace
+    that process with the requested program. The shell waits for the
+    child with waitpid() and stores the exit code.
+  - Web: compiled to WebAssembly with Emscripten. Since the browser has
+    no fork/exec, the commands are C built-ins that operate on a virtual,
+    in-memory filesystem.
+
+
+How it is organized
+-------------------
+  scanner.c   tokenizer: splits the line into words and symbols
+  parser.c    builds a linked list of commands from the tokens
+  command.c   the Command structure and operations on it
+  shell.c     execution: built-ins and launching processes
+  main.c      the read, parse and execute loop (REPL)
+
+
+What I learned to do
+--------------------
+  - Manage memory manually in C (allocating and freeing structures).
+  - Create and synchronize processes with fork(), execvp() and waitpid().
+  - Track the exit code of the last command (see "status").
+  - Command composition and input-line syntax validation.
+  - Port the same C to a different target (WebAssembly) without
+    duplicating the core logic, using conditional compilation.
+
+
+How to run it on your computer
+------------------------------
+  git clone https://github.com/tomasleote/op-shell
+  cd op-shell
+  make
+  ./shell
+
+More projects: https://github.com/tomasleote

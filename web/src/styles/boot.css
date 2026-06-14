@@ -1,0 +1,64 @@
+.boot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100%;
+  padding: var(--space-lg);
+  background: var(--color-bg);
+  cursor: pointer;
+}
+
+.boot__screen {
+  width: 100%;
+  max-width: var(--screen-max-width);
+  padding: var(--space-xl) var(--space-lg);
+  color: var(--color-fg);
+  text-shadow: 0 0 6px var(--color-glow);
+  animation: boot-on 0.65s ease-out;
+}
+
+.boot__lines {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+  white-space: pre-wrap;
+}
+
+.boot__wait {
+  color: var(--color-fg-dim);
+}
+
+.boot__cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  vertical-align: text-bottom;
+  background: var(--color-cursor);
+  box-shadow: 0 0 8px var(--color-glow);
+  animation: blink var(--blink-duration) steps(2, start) infinite;
+}
+
+@keyframes boot-on {
+  0% {
+    opacity: 0;
+    transform: scaleY(0.015);
+    filter: brightness(3.5);
+  }
+  45% {
+    opacity: 1;
+    transform: scaleY(1);
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .boot__screen {
+    animation: none;
+  }
+  .boot__cursor {
+    animation: none;
+  }
+}

@@ -2,9 +2,23 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include <assert.h>
 #include <stdbool.h>
 #include "scanner.h"
+
+// malloc/realloc wrappers: abort on allocation failure (matches command.c).
+static void *xmalloc(size_t n)
+{
+  void *p = malloc(n);
+  if (p == NULL) { perror("malloc"); exit(EXIT_FAILURE); }
+  return p;
+}
+
+static void *xrealloc(void *p, size_t n)
+{
+  void *q = realloc(p, n);
+  if (q == NULL) { perror("realloc"); exit(EXIT_FAILURE); }
+  return q;
+}
 
 /**
  * Reads an inputline from stdin.
@@ -17,12 +31,16 @@ char *readInputLine()
   int c = getchar();
   int i = 0;
 
-  char *s = malloc((strLen + 1) * sizeof(*s));
-  assert(s != NULL);
+  if (c == EOF)
+  { // EOF (Ctrl+D / closed stdin) on an empty line ends the REPL
+    return NULL;
+  }
+
+  char *s = xmalloc((strLen + 1) * sizeof(*s));
 
   bool quoteStarted = false;
-  while (c != '\n' || quoteStarted)
-  { // Ensure that newlines in strings are accepted
+  while (c != EOF && (c != '\n' || quoteStarted))
+  { // Ensure that newlines in strings are accepted; stop cleanly at EOF
     if (c == '\"')
     {
       quoteStarted = !quoteStarted;
@@ -32,8 +50,7 @@ char *readInputLine()
     if (i >= strLen)
     { // Resize the string if necessary
       strLen = 2 * strLen;
-      s = realloc(s, (strLen + 1) * sizeof(*s));
-      assert(s != NULL);
+      s = xrealloc(s, (strLen + 1) * sizeof(*s));
     }
     c = getchar();
   }
@@ -62,12 +79,13 @@ char *matchIdentifier(char *s, int *start)
   int strLen = INITIAL_STRING_SIZE;
   int pos = 0, offset = 0;
 
-  char *ident = malloc((strLen + 1) * sizeof(*ident));
-  assert(ident != NULL);
+  char *ident = xmalloc((strLen + 1) * sizeof(*ident));
 
   bool quoteStarted = false;
   size_t lenS = strlen(s);
-  while ((*start + offset <= lenS && !isspace(s[*start + offset]) && !isOperatorCharacter(s[*start + offset])) || quoteStarted)
+  // Bound by lenS first so an unterminated quote cannot read past the '\0'.
+  while (*start + offset < (int)lenS &&
+         (quoteStarted || (!isspace((unsigned char)s[*start + offset]) && !isOperatorCharacter(s[*start + offset]))))
   { // Ensure that whitespace in strings is accepted
     if (s[*start + offset] == '\"')
     { // Strip the quotes from the input before storing in the identifier
@@ -79,8 +97,7 @@ char *matchIdentifier(char *s, int *start)
     if (pos >= strLen)
     { // Resize the string if necessary
       strLen = 2 * strLen;
-      ident = realloc(ident, (strLen + 1) * sizeof(*ident));
-      assert(ident != NULL);
+      ident = xrealloc(ident, (strLen + 1) * sizeof(*ident));
     }
   }
   ident[pos] = '\0';
@@ -97,8 +114,7 @@ char *matchIdentifier(char *s, int *start)
  */
 List newNode(char *s, int *start)
 {
-  List node = malloc(sizeof(*node));
-  assert(node != NULL);
+  List node = xmalloc(sizeof(*node));
   node->next = NULL;
   node->t = matchIdentifier(s, start);
   return node;
@@ -115,11 +131,10 @@ char *matchOperator(char *s, int *start)
   int strLen = 2; // the operator consists of *at most* 2 characters
   int pos = 0, offset = 0;
 
-  char *op = malloc((strLen + 1) * sizeof(*op));
-  assert(op != NULL);
+  char *op = xmalloc((strLen + 1) * sizeof(*op));
 
-  while (isOperatorCharacter(s[*start + offset]))
-  {
+  while (pos < strLen && isOperatorCharacter(s[*start + offset]))
+  { // cap at strLen: operators are at most 2 chars, prevents heap overflow on "<<<" etc.
     op[pos++] = s[*start + offset++];
   }
   op[pos] = '\0';
@@ -136,8 +151,7 @@ char *matchOperator(char *s, int *start)
  */
 List newOperatorNode(char *s, int *start)
 {
-  List node = malloc(sizeof(*node));
-  assert(node != NULL);
+  List node = xmalloc(sizeof(*node));
   node->next = NULL;
   node->t = matchOperator(s, start);
   return node;
@@ -157,7 +171,7 @@ List getTokenList(char *s)
   int length = strlen(s);
   while (i < length)
   {
-    if (isspace(s[i]))
+    if (isspace((unsigned char)s[i]))
     { // spaces are skipped
       i++;
     }

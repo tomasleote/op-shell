@@ -1,0 +1,6 @@
+# Tool and test artifacts (not part of the project)
+.playwright-mcp/
+smoke-01-terminal.png
+
+# Compiled test runner (built locally by tests/run.sh)
+tests/run_tests
