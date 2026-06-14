@@ -1,0 +1,38 @@
+/* Design tokens: unica fonte de cores/spacing/tipografia. Nada hardcoded fora daqui. */
+:root {
+  --color-bg: #05080a;
+  --color-screen: #0a1410;
+  --color-fg: #33ff88;
+  --color-fg-dim: #1f9c54;
+  --color-banner: #8affc1;
+  --color-cursor: #33ff88;
+  --color-error: #ff6b5e;
+  --color-glow: rgba(51, 255, 136, 0.45);
+  --color-scanline: rgba(0, 0, 0, 0.28);
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas',
+    'Courier New', monospace;
+  --font-size: 15px;
+  --line-height: 1.55;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 40px;
+
+  --radius: 10px;
+  --screen-max-width: 900px;
+
+  --blink-duration: 1.05s;
+  --flicker-duration: 7s;
+  --scanline-size: 3px;
+}
+
+/* Acessibilidade: desligar todo o movimento decorativo. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --blink-duration: 0s;
+    --flicker-duration: 0s;
+  }
+}

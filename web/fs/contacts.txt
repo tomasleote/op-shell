@@ -1,0 +1,18 @@
+contacts
+========
+
+Want to work with me, need a website, or just say hi? Get in touch.
+
+Email:      tomas.leote@gmail.com
+LinkedIn:   https://www.linkedin.com/in/tom%C3%A1s-leote-falc%C3%A3o-a81860266
+GitHub:     https://github.com/tomasleote
+Portfolio:  https://tomasleotefalcao.vercel.app
+CV (PDF):   https://tomasleotefalcao.vercel.app/assets/CV_TomasLeote_Lisboa_2026-pr4aMARU.pdf
+
+Location: Lisbon, Portugal
+
+
+This shell's code
+-----------------
+The source for op-shell and my other projects is on GitHub:
+https://github.com/tomasleote

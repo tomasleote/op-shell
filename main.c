@@ -15,10 +15,16 @@
  * @return 0 if successful.
  */
 int main(int argc, char *argv[],  char **envp) {
+#ifdef __EMSCRIPTEN__
+    /* No browser REPL: a blocking getchar() loop would freeze the
+       single-threaded event loop. JS drives execution per command via
+       execute_line(); we just start in the preloaded demo home. */
+    chdir("/home/guest");
+    return 0;
+#else
     char *inputLine;
     List tokenList;
     Command *newTokenList;
-    int status;
     int parsedSuccessfully = 0;
 
     while (true) {
@@ -42,7 +48,14 @@ int main(int argc, char *argv[],  char **envp) {
 
         free(inputLine);
         freeTokenList(tokenList);
+
+        while (newTokenList != NULL) {
+            Command *nextCmd = newTokenList->next;
+            freeCommand(newTokenList);
+            newTokenList = nextCmd;
+        }
     }
-    
+
     return 0;
+#endif
 }

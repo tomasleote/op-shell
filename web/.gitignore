@@ -1,0 +1,8 @@
+node_modules
+dist
+*.log
+
+# Artefactos gerados pela Seccao 4 (build emcc)
+public/shell.js
+public/shell.wasm
+public/shell.data

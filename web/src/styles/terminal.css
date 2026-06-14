@@ -1,0 +1,183 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-mono);
+  font-size: var(--font-size);
+  line-height: var(--line-height);
+}
+
+.crt {
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  min-height: 100%;
+  padding: var(--space-lg);
+}
+
+.crt__bezel {
+  position: relative;
+  width: 100%;
+  max-width: var(--screen-max-width);
+  padding: var(--space-lg);
+  border-radius: var(--radius);
+  background: var(--color-screen);
+  box-shadow:
+    0 0 1px var(--color-glow),
+    0 0 60px rgba(0, 0, 0, 0.6) inset;
+  overflow: hidden;
+  cursor: text;
+  animation: flicker var(--flicker-duration) infinite steps(60);
+}
+
+.crt__scroll {
+  position: relative;
+  height: 70vh;
+  overflow-y: auto;
+  z-index: 1;
+}
+
+.crt__log {
+  margin: 0;
+}
+
+.block {
+  margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--color-fg);
+  text-shadow: 0 0 6px var(--color-glow);
+}
+
+.block--banner {
+  color: var(--color-banner);
+  margin-bottom: var(--space-md);
+}
+
+.block--input {
+  color: var(--color-fg-dim);
+}
+
+.block--error {
+  color: var(--color-error);
+  text-shadow: none;
+}
+
+.inputline {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.inputline__prompt {
+  color: var(--color-fg-dim);
+  white-space: pre;
+  text-shadow: 0 0 6px var(--color-glow);
+}
+
+.inputline__text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-shadow: 0 0 6px var(--color-glow);
+}
+
+.inputline__cursor {
+  display: inline-block;
+  width: 0.6em;
+  height: 1.1em;
+  margin-left: 1px;
+  background: var(--color-cursor);
+  box-shadow: 0 0 8px var(--color-glow);
+  animation: blink var(--blink-duration) steps(2, start) infinite;
+}
+
+/* Input real por cima da linha: captura teclas, mas invisivel. */
+.inputline__field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  font: inherit;
+}
+
+.crt__toggle {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-md);
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  color: var(--color-fg-dim);
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.crt__scanline-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent calc(var(--scanline-size) - 1px),
+    var(--color-scanline) var(--scanline-size)
+  );
+}
+
+.crt--scanlines .crt__scanline-overlay {
+  display: block;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes flicker {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  97% {
+    opacity: 1;
+  }
+  98% {
+    opacity: 0.96;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .crt__bezel {
+    animation: none;
+  }
+  .inputline__cursor {
+    animation: none;
+  }
+  .crt--scanlines .crt__scanline-overlay {
+    display: none;
+  }
+}

@@ -1,0 +1,52 @@
+about me
+========
+
+Tomas Leote Falcao
+Software developer, 24, based in Lisbon.
+
+
+Who I am
+--------
+I like taking ideas and making them work, whether that means building
+software and websites from scratch or solving problems that did not have
+a solution yet. I bring a mix of technical skill, an entrepreneurial
+mindset, and a desire to work in international, fast-moving teams.
+
+I am currently a Junior Software Developer at Minsait, on the Low Code
+and Innovation team, where I work on full-stack projects for several
+clients using low-code tools such as OutSystems, making sure the
+applications meet web accessibility standards.
+
+Before that I did internships at Avodah Creatives (frontend in React and
+Tailwind), at Hospital Lusiadas (Vue and .NET, full-stack), and at
+Klippa, in the Netherlands, where I did my thesis building analytics
+tools with Angular, GraphQL and Highcharts.
+
+
+Beyond the code
+---------------
+I founded Project Umbra, a music events company in Groningen, focused on
+low-cost events for the international community and on giving a stage to
+local talent in the electronic music scene. We ran more than 20 events,
+with up to 700 people each.
+
+In my free time I surf and go to the beach, watch football, discover new
+films and music, and I DJ.
+
+
+What I can do
+-------------
+Languages:   TypeScript, JavaScript, Java, Python, C#, C, R
+Web:         React, Angular, Vue, Node.js, .NET, HTML, CSS, Tailwind
+Low-code:    OutSystems
+Tools:       Git, GitHub, Figma
+
+
+Why a shell in the browser
+--------------------------
+I wanted to show a low-level project (C, memory management, processes) in
+a way that anyone could try without installing anything. The solution was
+to compile the same C to WebAssembly. Read "cat projects/op-shell.txt"
+for the technical details.
+
+Full portfolio: https://tomasleotefalcao.vercel.app

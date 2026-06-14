@@ -9,42 +9,6 @@
 #include <sys/wait.h>
 #include <sys/types.h>
 
-//TODO: Finish implementing this, not working yet
-bool isValidSyntax(List lp) {
-    bool openQuote = false;
-    char quoteChar = '\0';
-
-    while (lp != NULL) {
-        char *token = lp->t; // Correctly dereferencing to get the token
-        // Check for the presence of quotes in the token
-        for (int i = 0; token[i] != '\0'; i++) {
-            if (token[i] == '"' || token[i] == '\'') {
-                if (!openQuote) {
-                    // Opening quote found
-                    openQuote = true;
-                    quoteChar = token[i];
-                } else if (quoteChar == token[i]) {
-                    // Closing quote found
-                    openQuote = false;
-                }
-            }
-        }
-
-        lp = lp->next; // Move to the next token in the list
-    }
-
-    // If we've reached the end and a quote is still open, syntax is invalid
-    if (openQuote) {
-        printf("! Error: invalid syntax!\n");
-        return false;
-    }
-
-    printf("Syntax is valid!\n");
-    return true;
-}
-
-
-
 /**
  * Joins two strings together.
  * @param s1 first string.
@@ -149,11 +113,10 @@ bool parseCommand(List *lp, Command** head) {
  */
 bool parseExecutable(List *lp, Command **head) {
 
-  if (!isValidSyntax(*lp)) {
-        printf("! Error: invalid syntax!\n");
-        return false;
-    }
-  
+  if (*lp == NULL) { // e.g. a trailing pipe/operator with no command after it
+    return false;
+  }
+
   char* executableName = (*lp)->t;
   Command* newCmd = createCommand(executableName);
   char *path = getenv("PATH");
@@ -244,6 +207,9 @@ bool parseBuiltIn(List *lp, Command** head) {
   char *builtIns[] = {
       "exit",
       "status",
+      "cd",   // must be a builtin: a forked child cannot change the parent's cwd
+      "pwd",
+      "help",
       NULL};
 
   for (int i = 0; builtIns[i] != NULL; i++)
@@ -334,6 +300,7 @@ bool parseInputLineInternal(List* lp, Command** head) {
         return parseInputLineInternal(lp, head);
     }
 
+    return true; // chain parsed, no trailing operator
 }
 
 /**
@@ -352,8 +319,7 @@ bool parseInputLineInternal(List* lp, Command** head) {
 Command *parseInputLine(List *lp, int *parsedSuccessfully) {
   Command* head = NULL;
 
-  // Call the internal parsing function with the head pointer
   bool result = parseInputLineInternal(lp, &head);
-  *parsedSuccessfully = 1;
-  return (head);
+  *parsedSuccessfully = result ? 1 : 0;
+  return head;
 }
