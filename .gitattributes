@@ -1,0 +1,4 @@
+# Emscripten build artifacts are binary; never apply line-ending conversion
+# (CRLF would shift byte offsets in the .data package and corrupt the module).
+*.wasm binary
+*.data binary

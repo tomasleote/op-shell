@@ -1,0 +1,203 @@
+You found the first hidden file. Nicely spotted.
+
+You know that a dot at the start of a name hides a file from "ls". The
+same trick works for whole folders. There is a folder here that the
+normal "ls" does not show.
+
+Next clue: "cat .secrets/vault.txt"
+   ___   ___   ___
+  | o | | p | | ! |   vault open
+   ---   ---   ---
+
+You reached the end of the hunt. To open this folder you had to know that:
+  - a name starting with "." stays hidden from "ls",
+  - the files and folders are still there, you just need the path,
+  - "cat" reads any file as long as you give it the right path.
+
+That is exactly the kind of curiosity this shell was built to reward.
+
+If you are a recruiter and you made it here: thanks for exploring. The
+path you just took (reading code, following clues, working out how the
+tools behave under the hood) is how I like to work.
+
+Get in touch: "cat contacts.txt"
+about me
+========
+
+Tomas Leote Falcao
+Software developer, 24, based in Lisbon.
+
+
+Who I am
+--------
+I like taking ideas and making them work, whether that means building
+software and websites from scratch or solving problems that did not have
+a solution yet. I bring a mix of technical skill, an entrepreneurial
+mindset, and a desire to work in international, fast-moving teams.
+
+I am currently a Junior Software Developer at Minsait, on the Low Code
+and Innovation team, where I work on full-stack projects for several
+clients using low-code tools such as OutSystems, making sure the
+applications meet web accessibility standards.
+
+Before that I did internships at Avodah Creatives (frontend in React and
+Tailwind), at Hospital Lusiadas (Vue and .NET, full-stack), and at
+Klippa, in the Netherlands, where I did my thesis building analytics
+tools with Angular, GraphQL and Highcharts.
+
+
+Beyond the code
+---------------
+I founded Project Umbra, a music events company in Groningen, focused on
+low-cost events for the international community and on giving a stage to
+local talent in the electronic music scene. We ran more than 20 events,
+with up to 700 people each.
+
+In my free time I surf and go to the beach, watch football, discover new
+films and music, and I DJ.
+
+
+What I can do
+-------------
+Languages:   TypeScript, JavaScript, Java, Python, C#, C, R
+Web:         React, Angular, Vue, Node.js, .NET, HTML, CSS, Tailwind
+Low-code:    OutSystems
+Tools:       Git, GitHub, Figma
+
+
+Why a shell in the browser
+--------------------------
+I wanted to show a low-level project (C, memory management, processes) in
+a way that anyone could try without installing anything. The solution was
+to compile the same C to WebAssembly. Read "cat projects/op-shell.txt"
+for the technical details.
+
+Full portfolio: https://tomasleotefalcao.vercel.app
+contacts
+========
+
+Want to work with me, need a website, or just say hi? Get in touch.
+
+Email:      tomas.leote@gmail.com
+LinkedIn:   https://www.linkedin.com/in/tom%C3%A1s-leote-falc%C3%A3o-a81860266
+GitHub:     https://github.com/tomasleote
+Portfolio:  https://tomasleotefalcao.vercel.app
+CV (PDF):   https://tomasleotefalcao.vercel.app/assets/CV_TomasLeote_Lisboa_2026-pr4aMARU.pdf
+
+Location: Lisbon, Portugal
+
+
+This shell's code
+-----------------
+The source for op-shell and my other projects is on GitHub:
+https://github.com/tomasleote
+op-shell
+========
+A shell in C, from the Operating Systems course.
+(This is the project you are using right now.)
+
+
+Summary
+-------
+A command-line interpreter written from scratch in C99. It reads a line,
+splits it into tokens, builds the command structure and executes it. It
+has two execution modes from the same source code:
+
+  - Native: uses fork() to create a child process and execvp() to replace
+    that process with the requested program. The shell waits for the
+    child with waitpid() and stores the exit code.
+  - Web: compiled to WebAssembly with Emscripten. Since the browser has
+    no fork/exec, the commands are C built-ins that operate on a virtual,
+    in-memory filesystem.
+
+
+How it is organized
+-------------------
+  scanner.c   tokenizer: splits the line into words and symbols
+  parser.c    builds a linked list of commands from the tokens
+  command.c   the Command structure and operations on it
+  shell.c     execution: built-ins and launching processes
+  main.c      the read, parse and execute loop (REPL)
+
+
+What I learned to do
+--------------------
+  - Manage memory manually in C (allocating and freeing structures).
+  - Create and synchronize processes with fork(), execvp() and waitpid().
+  - Track the exit code of the last command (see "status").
+  - Command composition and input-line syntax validation.
+  - Port the same C to a different target (WebAssembly) without
+    duplicating the core logic, using conditional compilation.
+
+
+How to run it on your computer
+------------------------------
+  git clone https://github.com/tomasleote/op-shell
+  cd op-shell
+  make
+  ./shell
+
+More projects: https://github.com/tomasleote
+op-shell
+========
+
+What this is
+------------
+op-shell is a command-line shell written in C, built for an Operating
+Systems course. The same source code runs in two different places:
+
+  1. In a real terminal (Linux/macOS): clone the repository and run
+     "make && ./shell". There the shell uses fork() and execvp(), the
+     way a real shell launches processes.
+
+  2. Here, in the browser: the C was compiled to WebAssembly with
+     Emscripten and runs over a virtual, in-memory filesystem. This is
+     the version you are exploring right now.
+
+This web version is a demo: it lets you try the project without
+installing anything. There is no server and no backend, everything you
+type is run by the same C code inside your browser tab. If you want to
+see the source, it is all here:
+
+  https://github.com/tomasleote/op-shell
+
+
+Getting started (quick guide)
+-----------------------------
+If you have never used a shell, try these commands in this order. Type
+one at a time and press Enter.
+
+  ls               list the files and folders in the current folder
+  ls projects      list the contents of the "projects" folder
+  cd projects      enter the "projects" folder
+  pwd              show which folder you are in now
+  cat readme.txt   print the contents of a file to the screen
+  cd ..            go back to the previous folder
+  clear            clear the screen
+  help             show all available commands
+
+Suggested path: start with "cat about-me.txt", then "cat contacts.txt",
+and finally "cd projects" and read the files inside with "cat".
+
+
+Commands available in this web version
+--------------------------------------
+  help             list of commands and help
+  ls [folder]      list the contents of a folder
+  cd [folder]      change folder (cd .. goes up one level)
+  pwd              show the path of the current folder
+  cat <file>       print the contents of a file
+  echo [text]      write text back to the screen
+  mkdir <folder>   create a new folder
+  touch <file>     create an empty file
+  rm [-r] <target> remove a file (or folder, with -r)
+  clear            clear the screen
+  status           show the exit code of the last command
+  exit             end the session (in the browser it just says goodbye)
+
+
+Tip
+---
+Shells hide files whose name starts with a dot. The normal "ls" does not
+show them. If you are curious, there is something waiting for those who
+know this: try "cat .secret.txt".
